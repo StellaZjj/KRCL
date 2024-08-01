@@ -1,0 +1,185 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros -Q -L sbcl-bin -- $0 "$@"
+|#
+(progn
+  (ros:ensure-asdf)
+  (ql:quickload '("cl-ppcre" "split-sequence" "local-time") :silent t))
+
+(defpackage :ros.script.release.3703769340
+  (:use :cl))
+(in-package :ros.script.release.3703769340)
+
+(defvar *project-path* (truename (merge-pathnames "../" (make-pathname :name nil :type nil :defaults *load-pathname*))))
+(defvar *dummy-version* "master-changelog-which-not-yet-released")
+(defvar *new-version* nil)
+(defvar *owner* "roswell")
+(defvar *repo* "roswell")
+
+(defun find-version ()
+  (with-open-file (in (merge-pathnames "configure.ac" *project-path*))
+    (loop for line = (read-line in nil nil)
+       while line
+       for match = (nth-value 1 (cl-ppcre:scan-to-strings "^AC_INIT\\([^,]*,\\[([^,]*)\\]" line))
+       when match
+       do (return-from find-version (aref match 0)))))
+
+(defun inc-version (v)
+  (let ((version (mapcar #'parse-integer (split-sequence:split-sequence #\. v)))
+        (d (multiple-value-list(decode-universal-time (get-universal-time)))))
+    (setf (first version) (- (nth 5 d) 2000)
+          (second version) (nth 4 d)
+          (fourth version) (1+ (fourth version)))
+    (format nil "~{~2,'0d~^.~}" version)))
+
+(defun edit-file (path match replace version &key test)
+  (let ((file (with-open-file (in path :direction :input)
+                (loop for line = (read-line in nil nil)
+                   while line
+                   for match- = (nth-value 1 (cl-ppcre:scan-to-strings match line))
+                   collect (if match-
+                               (cl-ppcre:regex-replace replace line
+                                                       (format nil "\\{1}~A\\{3}" version))
+                               line)))))
+    (if test
+        file
+        (with-open-file (out path :direction :output :if-exists :supersede)
+          (dolist (line file)
+            (format out "~A~%" line))))))
+
+(defun edit-configure-ac (&optional (version *new-version*) test)
+  (edit-file (merge-pathnames "configure.ac" *project-path*)
+             "^AC_INIT\\([^,]*,\\[([^,]*)\\]"
+             "^(AC_INIT\\([^,]*,\\[)([^,]*)(\\].*)$"
+             version :test test))
+
+(defun edit-roswell-asd (&optional (version *new-version*) test)
+  (edit-file (merge-pathnames "roswell.asd" *project-path*)
+             "^[ ]*:version[ ]*\"[^,]*\"[ ]*$"
+             "^([ ]*:version[ ]*\")([^\"]*)(\".*)$"
+             (cl-ppcre:regex-replace-all "(\\.|^)0+([0-9])" version "\\{1}\\{2}") :test test))
+
+(defun edit-install-for-ci-sh (&optional (version *new-version*) test)
+  (edit-file (merge-pathnames "scripts/install-for-ci.sh" *project-path*)
+             "^ROSWELL_RELEASE_VERSION=(.*)"
+             "^(ROSWELL_RELEASE_VERSION=)(.*)()$"
+             version :test test))
+
+(defun signature ()
+  (flet ((f (cmd)
+           (string-right-trim
+            (format nil "~A" #\newline)
+            (with-output-to-string (o)
+              (uiop/run-program:run-program cmd :output o)))))
+    (format nil " -- ~A <~A>  ~A"
+            (f "git config --get user.name")
+            (f "git config --get user.email")
+            (local-time:format-rfc1123-timestring
+             nil
+             (local-time:universal-to-timestamp (get-universal-time))))))
+
+(defun edit-changelog () 
+  (let* ((path (merge-pathnames "ChangeLog" *project-path*))
+         (lines (uiop:read-file-lines path))
+         done)
+    (with-open-file (out path :direction :output :if-exists :supersede)
+      (loop for l in lines
+         with version = t
+         with date
+         do (cond ((and version (cl-ppcre:scan *dummy-version* l))
+                   (setf version nil
+                         l (cl-ppcre:regex-replace
+                            *dummy-version* l *new-version*)
+                         date t))
+                  ((and date (cl-ppcre:scan "^ --" l))
+                   (setf date nil
+                         l (signature)
+                         done t)))
+           (format out "~A~%" l)))
+    done))
+
+(defun ! (x)
+  (uiop:run-program x :output :interactive :error-output :interactive))
+
+(defun prepare-changelog (argv)
+  (declare (ignore argv))
+  (! "git checkout master")
+  (let* ((lines (uiop:read-file-lines (merge-pathnames "ChangeLog" *project-path*)))
+         (*new-version* *dummy-version*))
+    (with-open-file (out (merge-pathnames "ChangeLog" *project-path*)
+                         :direction :output :if-exists :supersede)
+      (format out "~{~A~%~}~{~A~%~}"
+              (list (format nil "roswell (~A-1) unstable; urgency=low" *new-version*)
+                    "" "  *" "" (signature) "")
+              lines))))
+
+(defun show-how-to-release ()
+  (format t "~{~A~%~}~%"
+          `("To release"
+            "1. Review changes and complete ChangeLog"
+            "2. Type"
+            "make release-commit")))
+
+(defun prepare (argv)
+  (declare (ignore argv))
+  (uiop/run-program:run-program "git checkout master" :output t)
+  (format t "~&current version is ~s.How about new one(default ~S)?:~%"
+          (find-version) (inc-version (find-version)))
+  (force-output)
+  (setq *new-version* (read-line))
+  (when (zerop (length *new-version*))
+    (setf *new-version* (inc-version (find-version))))
+  (format t "~&new version name is ~S~%" *new-version*)
+  (force-output)
+  (unless (edit-changelog)
+    (format *error-output* "changelog isn't prepared~%Type make release-changelog before make prepare~%")
+    (ros:quit))
+  (edit-configure-ac)
+  (edit-roswell-asd)
+  (show-how-to-release))
+
+(defun release-commit (argv)
+  (declare (ignore argv))
+  (!"git checkout master")
+  (!"git add ChangeLog configure.ac roswell.asd")
+  (!(format nil "git commit -m \"bump version to ~A\"" (find-version))))
+
+(defun release-push (argv)
+  (declare (ignore argv))
+  (let ((version (find-version)))
+    (! (format nil "git tag -a \"v~A\" -m \"v~A\""  version version)))
+  (!"git checkout master")
+  (format *error-output* "~{~A~%~}~%"
+          '("Type"
+            "git push --tags"
+            "git push origin master:master")))
+
+(defun changelog (argv)
+  "prepare changelog lines for newrelease"
+  (! "git checkout master")
+  (prepare-changelog argv)
+  (! "git add ChangeLog")
+  (! (format nil "git commit -m \"[ci skip] prepare ChangeLog entry next to v~A\"" (find-version))))
+
+(defun release-ci (argv)
+  (declare (ignore argv))
+  (!"git checkout master")
+  (let ((*new-version* (find-version)))
+    (edit-install-for-ci-sh)
+    (!"git add scripts/install-for-ci.sh")
+    (!(format nil "git commit -m \"bump install-for-ci.sh version to ~A\"" *new-version*)))
+  (!"git checkout release")
+  (!"git merge master")
+  (!"git checkout master")
+  (format *error-output* "~{~A~%~}~%"
+          '("Type"
+            "git push origin release:release"
+            )))
+
+(defun main (subcmd &rest argv)
+  (declare (ignorable argv))
+  (let ((subcmd (find subcmd '(prepare release release-push changelog release-ci)
+                      :test 'equal :key 'string-downcase)))
+    (when subcmd
+      (funcall subcmd argv))))

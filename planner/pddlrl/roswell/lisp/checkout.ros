@@ -1,0 +1,30 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros +A -Q -m roswell -N roswell -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf)
+  (ignore-errors
+   #+quicklisp(ql:quickload '(:ql-checkout) :silent t)))
+
+(defpackage :ros.script.checkout.3754705288
+  (:use :cl))
+(in-package :ros.script.checkout.3754705288)
+
+(defun main (&rest argv)
+  #+quicklisp
+  (ignore-errors
+    (unless (find-package :ql-checkout/config)
+      (funcall 'roswell.util:local-project-build-hash :rebuild t)
+      (ql:quickload '(:ql-checkout) :silent t))
+    (set (read-from-string "ql-checkout/config:*checkoutdir*")
+         (first roswell:*local-project-directories*)))
+  (cond ((not (find-package :ql-checkout))
+         (format t "checkout not supported~%"))
+        ((equal (first argv) "update-all")
+         (uiop:symbol-call :ql-checkout :update :all))
+        ((equal (first argv) "update")
+         (uiop:symbol-call :ql-checkout :update (rest argv)))
+        (t (uiop:symbol-call :ql-checkout :checkout argv nil))))
+;;; vim: set ft=lisp lisp:

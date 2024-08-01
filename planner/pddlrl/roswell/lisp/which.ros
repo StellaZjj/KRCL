@@ -1,0 +1,21 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#| show system's PATH
+exec ros -Q -m roswell -N roswell -- $0 "$@"
+|#
+(progn ;;init forms
+  (ros:ensure-asdf))
+
+(defpackage :ros.script.which.3708003709
+  (:use :cl))
+(in-package :ros.script.which.3708003709)
+
+(defun main (&rest argv)
+  (roswell.util:local-project-build-hash :rebuild t)
+  (dolist (name argv)
+    (let ((system (asdf:find-system name nil)))
+      (if system
+          (format t "~A~%"
+                  (uiop:native-namestring (asdf:system-source-file system)))
+          (ros:quit 1)))))
+;;; vim: set ft=lisp lisp:
