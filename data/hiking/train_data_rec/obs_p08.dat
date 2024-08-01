@@ -1,0 +1,5 @@
+(drive_tent guy1 place0 place1 car0 tent0)
+(put_down guy0 place0 tent1)
+(drive_tent guy0 place0 place1 car1 tent1)
+(put_up guy1 place1 tent0)
+(drive_tent_passenger guy0 place1 place2 car0 tent1 guy1)

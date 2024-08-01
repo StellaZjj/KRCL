@@ -1,0 +1,5 @@
+(go-out hoist0 depot1-2-1 loadarea)
+(lift hoist0 crate4 container-1-0 loadarea container1)
+(go-in hoist0 loadarea depot1-2-1)
+(drop hoist0 crate4 depot1-1-1 depot1-2-1 depot1)
+(go-out hoist0 depot1-2-1 loadarea)

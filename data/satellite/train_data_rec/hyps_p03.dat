@@ -1,0 +1,3 @@
+(have_image Planet8 thermograph1), (have_image Phenomenon9 spectrograph0), (have_image Star10 spectrograph0), (have_image Phenomenon11 thermograph1), (have_image Phenomenon12 spectrograph0)
+(have_image Star0 infrared2), (have_image Phenomenon9 spectrograph0), (have_image Phenomenon11 spectrograph0), (have_image Phenomenon12 infrared2), (have_image Phenomenon12 spectrograph0)
+(have_image Planet8 thermograph1), (have_image Star4 thermograph1), (have_image Star10 spectrograph0), (have_image Phenomenon11 thermograph1), (have_image GroundStation1 thermograph1)

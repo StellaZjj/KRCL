@@ -1,0 +1,3 @@
+(pointing satellite0 GroundStation8), (have_image Planet10 infrared2), (have_image Planet11 thermograph1), (have_image Planet12 spectrograph0), (have_image Star13 spectrograph0), (have_image Star14 infrared2), (have_image Star15 infrared2)
+(have_image Star0 infrared2), (have_image Planet10 infrared2), (have_image Star2 thermograph1), (have_image Planet12 spectrograph0), (have_image Star13 infrared2), (have_image Star14 infrared2), (have_image Star15 infrared2)
+(pointing satellite0 GroundStation8), (have_image Star4 spectrograph0), (have_image Planet11 thermograph1), (have_image Star0 spectrograph0), (have_image Star13 spectrograph0), (have_image Planet12 infrared2), (have_image Star15 infrared2)

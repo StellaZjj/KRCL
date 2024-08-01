@@ -1,0 +1,5 @@
+(refuel plane1 city2 fl0 fl1)
+(board person2 plane1 city2)
+(board person3 plane1 city2)
+(refuel plane1 city2 fl1 fl2)
+(board person5 plane1 city2)

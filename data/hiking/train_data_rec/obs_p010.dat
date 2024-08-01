@@ -1,0 +1,5 @@
+(drive_tent guy0 place0 place1 car0 tent1)
+(put_down girl0 place0 tent0)
+(drive_tent girl0 place0 place1 car1 tent0)
+(put_up girl0 place1 tent0)
+(walk_together tent0 place1 guy1 place0 girl1 couple1)

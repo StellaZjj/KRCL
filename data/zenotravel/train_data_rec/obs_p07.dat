@@ -1,0 +1,5 @@
+(refuel plane1 city1 fl0 fl1)
+(refuel plane1 city1 fl1 fl2)
+(refuel plane1 city1 fl2 fl3)
+(refuel plane1 city1 fl3 fl4)
+(fly plane1 city1 city3 fl4 fl3)

@@ -1,0 +1,5 @@
+(move loc-x2-y7 loc-x2-y6)
+(move loc-x2-y6 loc-x2-y5)
+(move loc-x2-y5 loc-x2-y4)
+(move loc-x2-y4 loc-x3-y4)
+(move loc-x3-y4 loc-x4-y4)

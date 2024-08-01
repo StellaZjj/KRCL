@@ -1,0 +1,3 @@
+(in crate0 container0), (in crate1 container0), (in crate2 depot0), (in crate3 depot1), (in crate4 depot1)
+(in crate0 depot0), (in crate1 depot0), (in crate2 depot0), (in crate3 container1), (in crate4 container1)
+(in crate0 depot0), (in crate1 depot0), (in crate2 depot0), (in crate3 depot1), (in crate4 depot1)
