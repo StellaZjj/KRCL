@@ -1,0 +1,35 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<droppedcompanionh5> dropped companion h5"];
+struct1 [label="<loadedpbody> loaded pbody|<atpbodyh5> at pbody h5|<carrypbodycompanion> carry pbody companion"];
+struct2 [label="<atpbodyh2> at pbody h2"];
+struct3 [label="<atpbodyh1> at pbody h1|<droppedcompanionh1> dropped companion h1"];
+struct4 [label="<markedpurpler1> marked purple r1|<markedbluer1> marked blue r1|<markedblueh5> marked blue h5|<markedpurpleh5> marked purple h5|<atpbodyr1> at pbody r1"];
+struct5 [label="<atpbodyh1> at pbody h1|<droppedcompanionh1> dropped companion h1"];
+struct6 [label="<atpbodyh4> at pbody h4"];
+struct7 [label="<atpbodyh3> at pbody h3"];
+struct8 [label="<markedpurpler1> marked purple r1|<atatlash5> at atlas h5"];
+struct9 [label="<markedbluer1> marked blue r1|<atatlash5> at atlas h5"];
+struct10 [label="<atpbodyh4> at pbody h4"];
+struct0:droppedcompanionh5 -> struct1:loadedpbody;
+struct0:droppedcompanionh5 -> struct1:atpbodyh5;
+struct0:droppedcompanionh5 -> struct1:carrypbodycompanion;
+struct3:atpbodyh1 -> struct2:atpbodyh2;
+struct1:loadedpbody -> struct3:atpbodyh1;
+struct1:loadedpbody -> struct3:droppedcompanionh1;
+struct1:atpbodyh5 -> struct4:markedpurpler1;
+struct1:atpbodyh5 -> struct4:markedbluer1;
+struct1:atpbodyh5 -> struct4:markedblueh5;
+struct1:atpbodyh5 -> struct4:markedpurpleh5;
+struct1:atpbodyh5 -> struct4:atpbodyr1;
+struct1:carrypbodycompanion -> struct3:atpbodyh1;
+struct1:carrypbodycompanion -> struct3:droppedcompanionh1;
+struct7:atpbodyh3 -> struct10:atpbodyh4;
+struct2:atpbodyh2 -> struct7:atpbodyh3;
+struct4:markedpurpleh5 -> struct8:markedpurpler1;
+struct4:markedpurpleh5 -> struct8:atatlash5;
+struct4:markedblueh5 -> struct9:markedbluer1;
+struct4:markedblueh5 -> struct8:atatlash5;
+struct4:atpbodyr1 -> struct6:atpbodyh4;
+}

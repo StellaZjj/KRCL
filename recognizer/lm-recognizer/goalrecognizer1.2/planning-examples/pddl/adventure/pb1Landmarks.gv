@@ -1,0 +1,5 @@
+digraph Tree {
+	node [shape=Mrecord, fontsize=14, color=black, fillcolor=white, fontcolor=black];
+	 edge [style=solid, color=black];
+struct0 [label=""];
+}

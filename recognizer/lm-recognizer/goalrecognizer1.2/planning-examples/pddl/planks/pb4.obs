@@ -1,0 +1,11 @@
+pick ana p1 px2y2 px3y2
+lay ana p1 px2y2 px1y2
+cross ana p2 px2y2 px2y1
+cross bob p1 px1y2 px2y2
+pick bob p1 px2y2 px1y2
+lay bob p1 px2y2 px3y2
+cross bob p1 px2y2 px3y2
+cross ana p2 px2y1 px2y2
+pick ana p2 px2y2 px2y1
+lay ana p2 px2y2 px1y2
+cross ana p2 px2y2 px1y2

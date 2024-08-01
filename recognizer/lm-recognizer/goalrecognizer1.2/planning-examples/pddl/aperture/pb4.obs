@@ -1,0 +1,10 @@
+exit pbody r2 h5
+move pbody h5 h2
+enter pbody h2 r1
+exit pbody r1 h1
+shoot pbody h1 r4 red
+report pbody h1 b1
+teleport pbody h1 r4 red yellow
+exit pbody r4 h4
+move pbody h4 h3
+enter pbody h3 r3

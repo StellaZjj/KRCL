@@ -1,0 +1,18 @@
+(define (problem pb1)
+	(:domain resource-consumption)
+	(:objects tr1 -vehicle loc1 loc2 loc3 loc4 -location gas -gasstation o1 o2 o3 o4 o5 -package)
+	(:init 	
+		(at_location_obj o1 loc1)
+		(at_location_obj o2 loc2)
+		(at_location_obj o3 loc3)
+		(at_location_obj o4 loc3)
+		(at_location_obj o5 loc4)
+		(at_location_veh tr1 loc1)
+		(full_fuel tr1))
+	(:goal  (and 
+			(in tr1 o1)
+			(in tr1 o2)
+			(in tr1 o3)
+			(in tr1 o4)
+			(in tr1 o5)))
+)

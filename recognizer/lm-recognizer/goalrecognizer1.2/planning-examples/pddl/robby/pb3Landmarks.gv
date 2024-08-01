@@ -1,0 +1,32 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<reportedbeacon2> reported beacon2|<reportedbeacon5> reported beacon5|<reportedbeacon4> reported beacon4|<atrobbyhallway8> at robby hallway8|<reportedbeacon1> reported beacon1|<reportedbeacon3> reported beacon3"];
+struct1 [label="<atrobbyroom4> at robby room4"];
+struct2 [label="<atrobbyhallway5> at robby hallway5"];
+struct3 [label="<atrobbyhallway7> at robby hallway7"];
+struct4 [label="<atrobbyhallway1> at robby hallway1"];
+struct5 [label=""];
+struct6 [label="<atrobbyhallway2> at robby hallway2"];
+struct7 [label="<atrobbyhallway2> at robby hallway2"];
+struct8 [label="<atrobbyhallway1> at robby hallway1"];
+struct9 [label="<atrobbyroom1> at robby room1"];
+struct10 [label="<atrobbyroom3> at robby room3"];
+struct11 [label="<atrobbyhallway6> at robby hallway6"];
+struct12 [label="<atrobbyhallway7> at robby hallway7"];
+struct13 [label="<atrobbyhallway4> at robby hallway4"];
+struct14 [label="<atrobbyhallway5> at robby hallway5"];
+struct0:reportedbeacon5 -> struct1:atrobbyroom4;
+struct0:reportedbeacon4 -> struct2:atrobbyhallway5;
+struct0:atrobbyhallway8 -> struct3:atrobbyhallway7;
+struct6:atrobbyhallway2 -> struct8:atrobbyhallway1;
+struct13:atrobbyhallway4 -> struct7:atrobbyhallway2;
+struct0:reportedbeacon2 -> struct6:atrobbyhallway2;
+struct9:atrobbyroom1 -> struct8:atrobbyhallway1;
+struct0:reportedbeacon1 -> struct9:atrobbyroom1;
+struct0:reportedbeacon3 -> struct10:atrobbyroom3;
+struct3:atrobbyhallway7 -> struct11:atrobbyhallway6;
+struct1:atrobbyroom4 -> struct3:atrobbyhallway7;
+struct10:atrobbyroom3 -> struct13:atrobbyhallway4;
+struct11:atrobbyhallway6 -> struct14:atrobbyhallway5;
+}

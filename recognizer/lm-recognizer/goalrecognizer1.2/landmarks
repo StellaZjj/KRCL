@@ -1,0 +1,23 @@
+#
+#  landmarks A script to run the landmark generator from anywhere in the hard drive
+#  Planning-Landmarks
+#
+#  Created by Felipe Meneguzzi on 2017-10-05.
+#  Copyright 2017 Felipe Meneguzzi. All rights reserved.
+#
+
+#!/usr/bin/env bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+LIB="${DIR}/lib"
+#echo ${DIR}
+echo "${@:1}"
+#CLASSPATH=${DIR}/javagp.jar:${DIR}/lib/jason.jar:${DIR}/lib/pddl4j.jar
+#CLASSPATH=${DIR}/lib/*
+for i in $LIB/*.jar; do
+    CLASSPATH=$CLASSPATH:$i
+done
+CLASSPATH=`echo $CLASSPATH | cut -c2-`
+CLASSPATH=${CLASSPATH}:${DIR}/bin
+#java -cp "${CLASSPATH}" -Xmx1g -jar "${DIR}/javagp.jar" "${@:1}"
+echo $CLASSPATH
+java -cp "${CLASSPATH}" -Xmx1g landmark.PlanningLandmarks "${@:1}"

@@ -1,0 +1,57 @@
+fly p1 apgh ala
+load o1 tpgh lpgh
+load o2 tpgh lpgh
+load o3 tpgh lpgh
+load o4 tpgh lpgh
+load o5 tbos lbos
+load o6 tbos lbos
+load o7 tbos lbos
+load o8 tla lla
+drive tbos lbos abos cbos
+unload o5 tbos abos
+unload o6 tbos abos
+unload o7 tbos abos
+drive tla lla ala cla
+unload o8 tla ala
+load o8 p1 ala
+drive tpgh lpgh apgh cpgh
+unload o1 tpgh apgh
+load o1 p2 apgh
+unload o2 tpgh apgh
+load o2 p2 apgh
+fly p2 apgh abos
+load o5 p2 abos
+load o6 p2 abos
+load o7 p2 abos
+unload o2 p2 abos
+unload o1 p2 abos
+fly p2 abos apgh
+load o1 tbos abos
+drive tbos abos lbos cbos
+unload o1 tbos lbos
+unload o5 p2 apgh
+load o5 tpgh apgh
+unload o6 p2 apgh
+unload o7 p2 apgh
+load o7 tpgh apgh
+drive tpgh apgh lpgh cpgh
+unload o5 tpgh lpgh
+unload o7 tpgh lpgh
+fly p1 ala apgh
+unload o8 p1 apgh
+drive tpgh lpgh apgh cpgh
+load o8 tpgh apgh
+drive tla ala lla cla
+unload o3 tpgh apgh
+load o3 p1 apgh
+unload o4 tpgh apgh
+drive tpgh apgh lpgh cpgh
+load o4 p1 apgh
+fly p1 apgh ala
+unload o3 p1 ala
+unload o4 p1 ala
+unload o8 tpgh lpgh
+drive tla lla ala cla
+load o3 tla ala
+drive tla ala lla cla
+unload o3 tla lla

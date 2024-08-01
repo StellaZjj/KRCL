@@ -1,0 +1,21 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<reportedpbodyb1> reported pbody b1|<atpbodyr3> at pbody r3"];
+struct1 [label="<atpbodyr1> at pbody r1"];
+struct2 [label="<atpbodyh1> at pbody h1"];
+struct3 [label="<atpbodyr2> at pbody r2"];
+struct4 [label="<atpbodyh4> at pbody h4"];
+struct5 [label="<atpbodyr2> at pbody r2"];
+struct6 [label="<atpbodyh5> at pbody h5"];
+struct7 [label="<atpbodyh3> at pbody h3"];
+struct8 [label="<atpbodyh2> at pbody h2"];
+struct2:atpbodyh1 -> struct1:atpbodyr1;
+struct0:reportedpbodyb1 -> struct2:atpbodyh1;
+struct6:atpbodyh5 -> struct5:atpbodyr2;
+struct7:atpbodyh3 -> struct4:atpbodyh4;
+struct4:atpbodyh4 -> struct5:atpbodyr2;
+struct8:atpbodyh2 -> struct6:atpbodyh5;
+struct0:atpbodyr3 -> struct7:atpbodyh3;
+struct1:atpbodyr1 -> struct8:atpbodyh2;
+}

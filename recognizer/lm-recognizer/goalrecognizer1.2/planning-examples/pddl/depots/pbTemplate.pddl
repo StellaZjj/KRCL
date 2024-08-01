@@ -1,0 +1,6 @@
+(define (problem pbTemplate)
+   (:domain depots)
+   (:objects #OBJECTS# )
+   (:init #INITIAL_STATE#)
+   (:goal (and #GOAL_STATE#) )
+)

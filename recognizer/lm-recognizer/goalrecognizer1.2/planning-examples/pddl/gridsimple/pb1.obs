@@ -1,0 +1,6 @@
+move p0_0 p1_0
+move p1_0 p1_1
+move p1_1 p1_0
+move p1_0 p1_1
+move p1_1 p1_2
+move p1_2 p2_2

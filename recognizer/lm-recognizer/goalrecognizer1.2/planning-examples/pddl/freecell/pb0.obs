@@ -1,0 +1,4 @@
+sendtonewcol h2 ha coln2 coln1
+sendtohome ha h3 h n1 h0 n0
+sendtohome-b h2 h n2 ha n1 coln1 coln2
+sendtohome-b h3 h n3 h2 n2 coln2 coln3

@@ -1,0 +1,8 @@
+unstack s t
+unstack t a
+unstack a r
+unstack r e
+unstack e y
+stack a y
+stack r a
+stack t r

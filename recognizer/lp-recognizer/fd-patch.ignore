@@ -1,0 +1,34 @@
+# Mac Stuff
+.DS_Store
+
+*.pyc
+__pycache__/
+
+misc/*
+driver/*
+experiments/*
+misc/autodoc/downward-xmlrpc\.secret
+builds/
+src/CMakeLists.txt.user
+# Generated files
+*.yy.cc
+*.temp0-e
+# IDE files
+.idea
+.vscode
+# Object files
+*.obj
+*.o
+# Binaries and outputs
+output.sas
+sas_plan
+sas_plan.*
+builds/
+src/validate
+src/VAL/validate
+src/preprocess/preprocess
+*.log
+.git
+builds
+h_result.txt
+Makefile.depend

@@ -1,0 +1,17 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<ond3peg3> on d3 peg3|<ond2d3> on d2 d3|<ond1d2> on d1 d2"];
+struct1 [label="<cleard3> clear d3|<clearpeg3> clear peg3|<ond3peg1> on d3 peg1"];
+struct2 [label="<cleard1> clear d1|<clearpeg2> clear peg2|<ond1d2> on d1 d2"];
+struct3 [label="<cleard2> clear d2|<clearpeg2> clear peg2|<ond2d3> on d2 d3"];
+struct0:ond3peg3 -> struct1:cleard3;
+struct0:ond3peg3 -> struct1:clearpeg3;
+struct0:ond3peg3 -> struct1:ond3peg1;
+struct3:cleard2 -> struct2:cleard1;
+struct3:cleard2 -> struct3:clearpeg2;
+struct3:cleard2 -> struct2:ond1d2;
+struct1:cleard3 -> struct3:cleard2;
+struct1:cleard3 -> struct2:clearpeg2;
+struct1:cleard3 -> struct3:ond2d3;
+}

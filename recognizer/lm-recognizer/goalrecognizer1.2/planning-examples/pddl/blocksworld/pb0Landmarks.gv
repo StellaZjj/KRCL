@@ -1,0 +1,20 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<onca> on c a|<onbd> on b d"];
+struct1 [label="<cleara> clear a|<holdingc> holding c"];
+struct2 [label="<cleard> clear d|<holdingb> holding b"];
+struct3 [label="<ondc> on d c|<cleard> clear d"];
+struct4 [label="<ontableb> ontable b|<clearb> clear b"];
+struct5 [label="<ontablec> ontable c|<clearc> clear c"];
+struct0:onca -> struct1:cleara;
+struct0:onca -> struct1:holdingc;
+struct0:onbd -> struct2:cleard;
+struct0:onbd -> struct2:holdingb;
+struct5:clearc -> struct3:ondc;
+struct5:clearc -> struct3:cleard;
+struct2:holdingb -> struct4:ontableb;
+struct2:holdingb -> struct4:clearb;
+struct1:holdingc -> struct5:ontablec;
+struct1:holdingc -> struct5:clearc;
+}

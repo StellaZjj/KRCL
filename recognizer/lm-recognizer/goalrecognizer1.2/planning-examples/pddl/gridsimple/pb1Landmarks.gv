@@ -1,0 +1,6 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<atp2_2> at p2_2"];
+struct1 [label=""];
+}

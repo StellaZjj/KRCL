@@ -1,0 +1,21 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<droppedcompanionup> dropped companion up|<atpbodyright> at pbody right"];
+struct1 [label="<loadedpbody> loaded pbody|<atpbodyup> at pbody up|<carrypbodycompanion> carry pbody companion"];
+struct2 [label="<droppedcompanionright> dropped companion right|<atpbodyright> at pbody right"];
+struct3 [label="<atpbodyleft> at pbody left"];
+struct4 [label="<droppedcompanionright> dropped companion right|<atpbodyright> at pbody right"];
+struct5 [label="<atpbodymiddle> at pbody middle"];
+struct6 [label="<atpbodymiddle> at pbody middle"];
+struct0:droppedcompanionup -> struct1:loadedpbody;
+struct0:droppedcompanionup -> struct1:atpbodyup;
+struct0:droppedcompanionup -> struct1:carrypbodycompanion;
+struct1:loadedpbody -> struct2:droppedcompanionright;
+struct1:loadedpbody -> struct4:atpbodyright;
+struct5:atpbodymiddle -> struct3:atpbodyleft;
+struct1:carrypbodycompanion -> struct2:droppedcompanionright;
+struct1:carrypbodycompanion -> struct4:atpbodyright;
+struct1:atpbodyup -> struct5:atpbodymiddle;
+struct0:atpbodyright -> struct5:atpbodymiddle;
+}

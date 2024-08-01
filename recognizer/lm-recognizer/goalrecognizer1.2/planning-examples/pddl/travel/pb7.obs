@@ -1,0 +1,4 @@
+board jack a bulldozer
+drive bulldozer a g
+disembark jack g bulldozer
+drive jack g a

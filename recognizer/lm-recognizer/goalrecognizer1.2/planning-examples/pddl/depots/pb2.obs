@@ -1,0 +1,8 @@
+;TOTAL_ACTIONS=6
+;ABANONED_ACTIONS=0
+lift hoist0 crate1 pallet0 depot0
+drive truck0 distributor1 depot0
+load hoist0 crate1 truck0 depot0
+drive truck0 depot0 distributor0
+unload hoist2 crate1 truck0 distributor0
+drop hoist2 crate1 pallet2 distributor0

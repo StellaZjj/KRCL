@@ -1,0 +1,10 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<atbobpx2y2> at bob px2y2"];
+struct1 [label="<emptypx2y2> empty px2y2|<bridgepx1y2p1px2y2> bridge px1y2 p1 px2y2|<lightbob> light bob|<atbobpx1y2> at bob px1y2"];
+struct0:atbobpx2y2 -> struct1:emptypx2y2;
+struct0:atbobpx2y2 -> struct1:bridgepx1y2p1px2y2;
+struct0:atbobpx2y2 -> struct1:lightbob;
+struct0:atbobpx2y2 -> struct1:atbobpx1y2;
+}

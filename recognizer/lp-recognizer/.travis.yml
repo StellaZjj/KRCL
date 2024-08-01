@@ -1,0 +1,27 @@
+dist: bionic
+git:
+  depth: 3
+language: python
+python:
+  - "3"
+# command to install dependencies
+before_install: 
+  - sudo apt-get update -y
+  - sudo apt-get update
+  - sudo apt install wget cmake g++ git make python3 zlib1g-dev libgmp3-dev bzip2
+install: 
+  - chmod +x *.sh
+  - ./install-soplex.sh
+  - ./prepare-fd.sh
+  - chmod +x *.py
+script: 
+  - ./test_units.py
+  - ./test_instance.py -r delta -e experiments/small-sokoban-optimal/50/sokoban_p01_hyp-1_50_1.tar.bz2 -S soplex
+  - ./test_domain.py "experiments/" small-sokoban-optimal "delta delta-cl delta-o-cl1" -S soplex
+  - ./data_domain.py small-sokoban-optimal -test
+  - ./data_output.py "delta-cl delta-o-cl1" small-sokoban-optimal -test
+  - ./data_charts.py lm small-sokoban-optimal -stats -scatter -sums -test
+  - ./data_comparison.py lm "delta-cl delta-o-cl1" optimal -test
+branches:
+  only:
+    - master

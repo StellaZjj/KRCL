@@ -1,0 +1,14 @@
+exit pbody r2 h5
+move pbody h5 h2
+enter pbody h2 r1
+exit pbody r1 h1
+shoot pbody h1 r4 red
+teleport pbody h1 r4 red yellow
+exit pbody r4 h4
+move pbody h4 h3
+enter pbody h3 r3
+shoot pbody r3 r4 yellow
+teleport pbody r3 h1 yellow red
+pick pbody h1 c1
+teleport pbody h1 r3 red yellow
+drop pbody r3 c1

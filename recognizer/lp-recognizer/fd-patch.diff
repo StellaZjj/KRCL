@@ -1,0 +1,2840 @@
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/CMakeLists.txt fast-downward/src/search/CMakeLists.txt
+--- fast-downward-original/src/search/CMakeLists.txt	2023-11-15 18:14:39.797760300 -0300
++++ fast-downward/src/search/CMakeLists.txt	2024-02-24 20:05:13.695279700 -0300
+@@ -857,7 +857,10 @@
+     SOURCES
+         operator_counting/constraint_generator
+         operator_counting/delete_relaxation_constraints
++        operator_counting/flow_constraints
++        operator_counting/flow_constraint_internals
+         operator_counting/lm_cut_constraints
++        operator_counting/oc_single_shot_heuristic
+         operator_counting/operator_counting_heuristic
+         operator_counting/pho_constraints
+         operator_counting/state_equation_constraints
+@@ -873,6 +876,7 @@
+         pdbs/canonical_pdbs_heuristic
+         pdbs/cegar
+         pdbs/dominance_pruning
++        pdbs/explicit_projection
+         pdbs/incremental_canonical_pdbs
+         pdbs/match_tree
+         pdbs/max_cliques
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/algorithms/combinations.h fast-downward/src/search/algorithms/combinations.h
+--- fast-downward-original/src/search/algorithms/combinations.h	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/algorithms/combinations.h	2024-02-24 20:05:13.691320200 -0300
+@@ -0,0 +1,45 @@
++#ifndef ALGORITHMS_COMBINATIONS_H
++#define ALGORITHMS_COMBINATIONS_H
++
++#include "../task_proxy.h"
++#include "../utils/logging.h"
++#include "../utils/collections.h"
++
++#include <cassert>
++#include <iostream>
++#include <vector>
++
++template<typename T>
++class Combinations {
++     std::vector<T> current_combination;
++     std::vector<std::vector<T>> combinations;
++
++     void add_combinations(const std::vector<T> &sequence, int offset, int k) {
++         if (k == 0) {
++             combinations.push_back(current_combination);
++             return;
++         }
++         for (size_t i = offset; i <= sequence.size() - k; ++i) {
++             assert(utils::in_bounds(i, sequence));
++             current_combination.push_back(sequence[i]);
++             add_combinations(sequence, i + 1, k - 1);
++             current_combination.pop_back();
++         }
++     }
++
++public:
++     std::vector<std::vector<T>> && get_combinations(
++         const std::vector<T> &sequence, int k) {
++         assert(k >= 0);
++         combinations.clear();
++         current_combination.clear();
++         int n = sequence.size();
++         if (k > n) {
++             return std::move(combinations);
++         }
++         add_combinations(sequence, 0, k);
++         return std::move(combinations);
++     }
++};
++
++#endif
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/algorithms/named_vector.h fast-downward/src/search/algorithms/named_vector.h
+--- fast-downward-original/src/search/algorithms/named_vector.h	2023-11-15 18:14:29.852554800 -0300
++++ fast-downward/src/search/algorithms/named_vector.h	2024-02-24 20:05:13.693284200 -0300
+@@ -92,6 +92,10 @@
+         names.clear();
+     }
+ 
++    void erase(std::vector<T>::const_iterator start, std::vector<T>::const_iterator end) {
++        elements.erase(start, end);
++    }
++
+     void reserve(int capacity) {
+         /* No space is reserved in the names vector because it is kept
+            at minimal size and space is only used when necessary. */
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/heuristics/lm_cut_landmarks.cc fast-downward/src/search/heuristics/lm_cut_landmarks.cc
+--- fast-downward-original/src/search/heuristics/lm_cut_landmarks.cc	2023-11-15 18:14:39.829874200 -0300
++++ fast-downward/src/search/heuristics/lm_cut_landmarks.cc	2024-02-24 20:05:13.697389500 -0300
+@@ -10,6 +10,63 @@
+ 
+ namespace lm_cut_heuristic {
+ // construction and destruction
++    
++LandmarkCutLandmarks::LandmarkCutLandmarks(const TaskProxy &task_proxy, const vector<int> &observations, bool include_goal) {
++    task_properties::verify_no_axioms(task_proxy);
++    task_properties::verify_no_conditional_effects(task_proxy);
++
++    // Build propositions.
++    num_propositions = 2; // artificial goal and artificial precondition
++    VariablesProxy variables = task_proxy.get_variables();
++    propositions.resize(variables.size());
++    for (FactProxy fact : variables.get_facts()) {
++        int var_id = fact.get_variable().get_id();
++        propositions[var_id].push_back(RelaxedProposition());
++        ++num_propositions;
++    }
++
++    // Build relaxed operators for operators and axioms.
++    for (OperatorProxy op : task_proxy.get_operators())
++        build_relaxed_operator(op);
++
++    // Simplify relaxed operators.
++    // simplify();
++    /* TODO: Put this back in and test if it makes sense,
++       but only after trying out whether and how much the change to
++       unary operators hurts. */
++
++    // Build artificial goal proposition and operator.
++    vector<RelaxedProposition *> goal_op_pre, goal_op_eff;
++
++    if (include_goal) {
++        for (FactProxy goal : task_proxy.get_goals()) {
++            goal_op_pre.push_back(get_proposition(goal));
++        }
++    }
++    cout << "Observation preconditions: " << endl;
++    for (int op_id : observations) {
++        for (FactProxy f : task_proxy.get_operators()[op_id].get_preconditions()) {
++            RelaxedProposition *pre = get_proposition(f);
++            if (std::find(goal_op_pre.begin(), goal_op_pre.end(), pre) == goal_op_pre.end()) {
++                goal_op_pre.push_back(pre);
++                cout << f.get_name() << endl;
++            }
++        }
++    }
++    goal_op_eff.push_back(&artificial_goal);
++    /* Use the invalid operator ID -1 so accessing
++       the artificial operator will generate an error. */
++    add_relaxed_operator(move(goal_op_pre), move(goal_op_eff), -1, 0);
++
++    // Cross-reference relaxed operators.
++    for (RelaxedOperator &op : relaxed_operators) {
++        for (RelaxedProposition *pre : op.preconditions)
++            pre->precondition_of.push_back(&op);
++        for (RelaxedProposition *eff : op.effects)
++            eff->effect_of.push_back(&op);
++    }
++}
++
+ LandmarkCutLandmarks::LandmarkCutLandmarks(const TaskProxy &task_proxy) {
+     task_properties::verify_no_axioms(task_proxy);
+     task_properties::verify_no_conditional_effects(task_proxy);
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/heuristics/lm_cut_landmarks.h fast-downward/src/search/heuristics/lm_cut_landmarks.h
+--- fast-downward-original/src/search/heuristics/lm_cut_landmarks.h	2023-11-15 18:14:39.830871400 -0300
++++ fast-downward/src/search/heuristics/lm_cut_landmarks.h	2024-02-24 20:05:13.699384700 -0300
+@@ -87,6 +87,7 @@
+     using CostCallback = std::function<void (int)>;
+     using LandmarkCallback = std::function<void (const Landmark &, int)>;
+ 
++    LandmarkCutLandmarks(const TaskProxy &task_proxy, const std::vector<int> &observations, bool include_goal=true);
+     LandmarkCutLandmarks(const TaskProxy &task_proxy);
+     virtual ~LandmarkCutLandmarks();
+ 
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/constraint_generator.cc fast-downward/src/search/operator_counting/constraint_generator.cc
+--- fast-downward-original/src/search/operator_counting/constraint_generator.cc	2023-11-15 18:14:39.881902300 -0300
++++ fast-downward/src/search/operator_counting/constraint_generator.cc	2024-02-24 20:05:13.701379000 -0300
+@@ -5,10 +5,18 @@
+ using namespace std;
+ 
+ namespace operator_counting {
++    
+ void ConstraintGenerator::initialize_constraints(
+     const shared_ptr<AbstractTask> &, lp::LinearProgram &) {
+ }
+ 
++void ConstraintGenerator::set_observations(const vector<int>& observations, int obs_info) {
++   this->obs_info = obs_info;
++   this->observations = observations;
++}
++
++void ConstraintGenerator::log_info(const TaskProxy&, const vector<double>&, vector<double>&) {}
++
+ static class ConstraintGeneratorCategoryPlugin : public plugins::TypedCategoryPlugin<ConstraintGenerator> {
+ public:
+     ConstraintGeneratorCategoryPlugin() : TypedCategoryPlugin("ConstraintGenerator") {
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/constraint_generator.h fast-downward/src/search/operator_counting/constraint_generator.h
+--- fast-downward-original/src/search/operator_counting/constraint_generator.h	2023-11-15 18:14:39.882899700 -0300
++++ fast-downward/src/search/operator_counting/constraint_generator.h	2024-02-24 20:05:13.703374300 -0300
+@@ -5,6 +5,7 @@
+ #include <vector>
+ 
+ #include "../algorithms/named_vector.h"
++#include "../task_proxy.h"
+ 
+ class AbstractTask;
+ class State;
+@@ -12,8 +13,20 @@
+ namespace lp {
+ class LinearProgram;
+ class LPSolver;
++class LPVariable;
+ }
+ 
++namespace options {
++class OptionParser;
++class Options;
++}
++
++// obs_info
++#define OBS_NONE 0
++#define OBS_NO_ORDER 1
++#define OBS_SOFT_ORDER 2
++#define OBS_HARD_ORDER 3
++
+ namespace operator_counting {
+ /*
+   Derive from this class to add new operator-counting constraints. We support
+@@ -31,6 +44,8 @@
+ */
+ class ConstraintGenerator {
+ public:
++    std::vector<int> observations;
++    int obs_info = 0;
+     virtual ~ConstraintGenerator() = default;
+ 
+     /*
+@@ -49,6 +64,9 @@
+     */
+     virtual bool update_constraints(
+         const State &state, lp::LPSolver &lp_solver) = 0;
++
++    void set_observations(const std::vector<int>& observations, int obs_info = 0);
++    virtual void log_info(const TaskProxy &task_proxy, const std::vector<double>& solution, std::vector<double>& info);
+ };
+ }
+ 
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/delete_relaxation_constraints.cc fast-downward/src/search/operator_counting/delete_relaxation_constraints.cc
+--- fast-downward-original/src/search/operator_counting/delete_relaxation_constraints.cc	2023-11-15 18:14:39.882899700 -0300
++++ fast-downward/src/search/operator_counting/delete_relaxation_constraints.cc	2024-02-26 17:00:47.602226500 -0300
+@@ -7,6 +7,7 @@
+ #include "../utils/markup.h"
+ 
+ #include <cassert>
++#include <map>
+ 
+ using namespace std;
+ 
+@@ -21,15 +22,37 @@
+ }
+ 
+ 
++// noisy
++#define DL_NO_NOISY 0
++#define DL_NOISY 1
++#define DL_NOISY_INV 2
++#define DL_NOISY_SOFT_INV 3
++
++// is_integer
++#define INT_NONE 0
++#define INT_ALL 1
++#define INT_OBS 2
++
++
+ DeleteRelaxationConstraints::DeleteRelaxationConstraints(const plugins::Options &opts)
+     : use_time_vars(opts.get<bool>("use_time_vars")),
+-      use_integer_vars(opts.get<bool>("use_integer_vars")) {
++   // use_integer_vars(opts.get<bool>("use_integer_vars")),
++    use_integer_vars_op(opts.get<int>("use_integer_vars_op")),
++    use_integer_vars_op2(opts.get<int>("use_integer_vars_op2")),
++    use_integer_vars_facts(opts.get<int>("use_integer_vars_fact")),
++    use_integer_vars_achiever(opts.get<int>("use_integer_vars_achiever")),
++    use_integer_vars_time(opts.get<int>("use_integer_vars_time")),
++    noisy(opts.get<int>("noisy")) {
+ }
+ 
+ int DeleteRelaxationConstraints::get_var_op_used(const OperatorProxy &op) {
+     return lp_var_id_op_used[op.get_id()];
+ }
+ 
++int DeleteRelaxationConstraints::get_var_op_used2(const OperatorProxy &op) {
++    return lp_var_id_op_used2[op.get_id()];
++}
++
+ int DeleteRelaxationConstraints::get_var_fact_reached(FactPair f) {
+     return lp_var_id_fact_reached[f.var][f.value];
+ }
+@@ -43,6 +66,10 @@
+     return lp_var_id_op_time[op.get_id()];
+ }
+ 
++int DeleteRelaxationConstraints::get_var_op_time2(const OperatorProxy &op) {
++    return lp_var_id_op_time2[op.get_id()];
++}
++
+ int DeleteRelaxationConstraints::get_var_fact_time(FactPair f) {
+     return lp_var_id_fact_time[f.var][f.value];
+ }
+@@ -51,6 +78,17 @@
+     return constraint_ids[f.var][f.value];
+ }
+ 
++// For var_op_used and var_op_used2
++static void add_lp_variables(int count, vector<bool>& obs_used,
++        LPVariables &variables, vector<int> &indices,
++        double lower, double upper, double objective,
++        int is_integer) {
++    for (int i = 0; i < count; ++i) {
++        indices.push_back(variables.size());
++        variables.emplace_back(lower, upper, objective, is_integer == INT_ALL || (is_integer == INT_OBS && obs_used[i]));
++    }
++}
++
+ void DeleteRelaxationConstraints::create_auxiliary_variables(
+     const TaskProxy &task_proxy, LPVariables &variables) {
+     OperatorsProxy ops = task_proxy.get_operators();
+@@ -58,38 +96,45 @@
+     VariablesProxy vars = task_proxy.get_variables();
+     int num_vars = vars.size();
+ 
++    vector<bool> obs_used(num_ops, false);
++    for (int id : observations)
++        obs_used[id] = true;
++
+     // op_used
+-    add_lp_variables(num_ops, variables, lp_var_id_op_used, 0, 1, 0, use_integer_vars);
++    add_lp_variables(num_ops, variables, lp_var_id_op_used, 0, 1, 0, use_integer_vars_op);
++    if (obs_info != OBS_NONE)
++        add_lp_variables(num_ops, obs_used, variables, lp_var_id_op_used2, 0, 1, 0, use_integer_vars_op2);
+ 
+     // fact_reached
+     lp_var_id_fact_reached.resize(num_vars);
+     for (VariableProxy var : vars) {
+         add_lp_variables(var.get_domain_size(), variables,
+                          lp_var_id_fact_reached[var.get_id()],
+-                         0, 1, 0, use_integer_vars);
++                         0, 1, 0, use_integer_vars_facts == INT_ALL);
+     }
+ 
+     // first_achiever
+     lp_var_id_first_achiever.resize(num_ops);
+     for (OperatorProxy op : ops) {
++        bool is_integer = use_integer_vars_achiever == INT_ALL || (use_integer_vars_achiever == INT_OBS && obs_used[op.get_id()]);
+         lp_var_id_first_achiever[op.get_id()].resize(num_vars);
+         for (VariableProxy var : vars) {
+-            add_lp_variables(var.get_domain_size(), variables,
++            add_lp_variables(var.get_domain_size(), obs_used, variables,
+                              lp_var_id_first_achiever[op.get_id()][var.get_id()],
+-                             0, 1, 0, use_integer_vars);
++                             0, 1, 0, is_integer);
+         }
+     }
+ 
+     if (use_time_vars) {
+         // op_time
+-        add_lp_variables(num_ops, variables, lp_var_id_op_time, 0, num_ops, 0, use_integer_vars);
++        add_lp_variables(num_ops, variables, lp_var_id_op_time, 0, num_ops, 0, use_integer_vars_time);
+ 
+         // fact_time
+         lp_var_id_fact_time.resize(num_vars);
+         for (VariableProxy var : vars) {
+             add_lp_variables(var.get_domain_size(), variables,
+                              lp_var_id_fact_time[var.get_id()],
+-                             0, num_ops, 0, use_integer_vars);
++                             0, num_ops, 0, use_integer_vars_time == INT_ALL);
+         }
+     }
+ }
+@@ -165,6 +210,28 @@
+         }
+     }
+ 
++    // Observed operators
++    map<int, int> occur;
++    for (int obs_id : observations)
++        occur[obs_id]++;
++    if (noisy == DL_NOISY) {
++        cout << "Soft restrictions for observation variables." << endl;
++        int var_id = task_proxy.get_operators().size();
++        for (auto it = occur.begin(); it != occur.end(); it++) {
++            lp::LPConstraint constraint_inv(0, infinity);
++            constraint_inv.insert(var_id, -1);
++            constraint_inv.insert(lp_var_id_op_used[it->first], it->second);
++            constraints.push_back(constraint_inv);
++            var_id++;
++        }
++    } else if (noisy == DL_NO_NOISY) {
++        cout << "Hard restrictions for operator variables." << endl;
++        for (int obs : observations) {
++            int var = get_var_op_used(ops[obs]);
++            variables[var].lower_bound = 1;
++        }
++    }
++
+     if (use_time_vars) {
+         /*
+           Preconditions must be reached before the operator is used.
+@@ -179,6 +246,34 @@
+             }
+         }
+ 
++
++        if (obs_info == OBS_NONE)
++            cout << "No observations." << endl;
++        else if (obs_info == OBS_NO_ORDER)
++            cout << "No observation order." << endl;
++        else if (obs_info == OBS_SOFT_ORDER)
++            cout << "Soft observation order." << endl;
++        else if (obs_info == OBS_HARD_ORDER)
++            cout << "Hard observation order." << endl;
++
++        if (obs_info != OBS_NONE) {
++            int N = ops.size();
++            vector<int> first_obs;
++            for (int obs : observations)
++                if (find(first_obs.begin(), first_obs.end(), obs) == first_obs.end())
++                    first_obs.push_back(obs);
++            for (uint i = 1; i < first_obs.size(); i++) {
++                OperatorProxy op1 = ops[first_obs[i-1]];
++                OperatorProxy op2 = ops[first_obs[i]];
++                lp::LPConstraint constraint(1, infinity);
++                constraint.insert(get_var_op_time(op2), 1);
++                constraint.insert(get_var_op_time(op1), -1);
++                if (obs_info == OBS_SOFT_ORDER) // Soft observation order
++                    constraint.insert(get_var_op_used2(op2), N);
++                constraints.push_back(constraint);
++            }
++        }
++
+         /*
+           If an operator is a first achiever, its effects are reached in
+           the time step following its use.
+@@ -208,13 +303,37 @@
+         lp::LPConstraint constraint(0, infinity);
+         constraint.insert(op.get_id(), 1);
+         constraint.insert(get_var_op_used(op), -1);
++        if (obs_info == OBS_SOFT_ORDER) // Soft observation order
++            constraint.insert(get_var_op_used2(op), -1);
+         constraints.push_back(constraint);
++        if (noisy == DL_NOISY_SOFT_INV || (noisy == DL_NOISY_INV && occur[op.get_id()] > 0)) {
++            lp::LPConstraint constraint_inv(0, infinity);
++            constraint_inv.insert(op.get_id(), -1);
++            constraint_inv.insert(get_var_op_used(op), 10000);
++            constraints.push_back(constraint_inv);
++        }
+     }
+ }
+ 
+ 
+-void DeleteRelaxationConstraints::initialize_constraints(
+-    const shared_ptr<AbstractTask> &task, lp::LinearProgram &lp) {
++void DeleteRelaxationConstraints::initialize_constraints(const shared_ptr<AbstractTask> &task,
++                                                         lp::LinearProgram &lp) {
++    lp_var_id_op_used.clear();
++    lp_var_id_op_used2.clear();
++    lp_var_id_fact_reached.clear();
++    lp_var_id_first_achiever.clear();
++    lp_var_id_op_time.clear();
++    lp_var_id_op_time2.clear();
++    lp_var_id_fact_time.clear();
++    if (use_integer_vars_op)
++        cout << "Using integer operator variables" << endl;
++    if (use_integer_vars_achiever)
++        cout << "Using integer first achiever variables" << endl;
++    if (use_integer_vars_facts)
++        cout << "Using integer fact variables" << endl;
++    if (use_integer_vars_time)
++        cout << "Using integer time variables" << endl;
++    constraint_ids.clear();
+     TaskProxy task_proxy(*task);
+     create_auxiliary_variables(task_proxy, lp.get_variables());
+     create_constraints(task_proxy, lp);
+@@ -236,6 +355,18 @@
+     return false;
+ }
+ 
++void DeleteRelaxationConstraints::log_info(const TaskProxy &task_proxy, const vector<double> &solution, vector<double> &info) {
++    if (obs_info != OBS_SOFT_ORDER)
++        return;
++    int u2 = 0;
++    for (OperatorProxy op : task_proxy.get_operators()) {
++        int var_id = get_var_op_used2(op);
++        if (solution[var_id] > 0)
++            u2++;
++    }
++    info.push_back(u2);
++}
++
+ class DeleteRelaxationConstraintsFeature : public plugins::TypedFeature<ConstraintGenerator, DeleteRelaxationConstraints> {
+ public:
+     DeleteRelaxationConstraintsFeature() : TypedFeature("delete_relaxation_constraints") {
+@@ -264,15 +395,39 @@
+             "increase the size of the constraints which has a strong impact on "
+             "runtime. Constraints involving time variables use a big-M encoding, "
+             "so they are more useful if used with integer variables.",
+-            "false");
+-        add_option<bool>(
++            "true");
++        /*add_option<bool>(
+             "use_integer_vars",
+             "restrict auxiliary variables to integer values. These variables "
+             "encode whether operators are used, facts are reached, which operator "
+             "first achieves which fact, and in which order the operators are used. "
+             "Restricting them to integers generally improves the heuristic value "
+             "at the cost of increased runtime.",
+-            "false");
++            "false");*/
++
++        add_option<int>(
++            "use_integer_vars_op", 
++            "",
++            "0");
++        add_option<int>(
++            "use_integer_vars_op2", 
++            "",
++            "0");
++        add_option<int>(
++            "use_integer_vars_fact", 
++            "",
++            "0");
++        add_option<int>(
++            "use_integer_vars_achiever", 
++            "",
++            "0");
++        add_option<int>(
++            "use_integer_vars_time", 
++            "",
++            "0");
++        add_option<int>("noisy",
++            "consider noisy observations",
++            "0");
+ 
+         document_note(
+             "Example",
+@@ -283,4 +438,4 @@
+ };
+ 
+ static plugins::FeaturePlugin<DeleteRelaxationConstraintsFeature> _plugin;
+-}
++}
+\ No newline at end of file
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/delete_relaxation_constraints.h fast-downward/src/search/operator_counting/delete_relaxation_constraints.h
+--- fast-downward-original/src/search/operator_counting/delete_relaxation_constraints.h	2023-11-15 18:14:39.882899700 -0300
++++ fast-downward/src/search/operator_counting/delete_relaxation_constraints.h	2024-02-24 20:05:13.707486400 -0300
+@@ -3,13 +3,12 @@
+ 
+ #include  "constraint_generator.h"
+ 
+-#include "../task_proxy.h"
+-
+ #include <memory>
+ 
+ namespace lp {
+ class LPConstraint;
+ struct LPVariable;
++class LinearProgram;
+ }
+ 
+ namespace plugins {
+@@ -22,11 +21,13 @@
+ 
+ class DeleteRelaxationConstraints : public ConstraintGenerator {
+     bool use_time_vars;
+-    bool use_integer_vars;
++    int use_integer_vars_op, use_integer_vars_op2, use_integer_vars_facts, use_integer_vars_achiever, use_integer_vars_time;
++    int noisy;
+ 
+     /* [U_o] Is op part of the relaxed plan?
+        Binary, indexed with op.id */
+     std::vector<int> lp_var_id_op_used;
++    std::vector<int> lp_var_id_op_used2;
+ 
+     /* [R_f] Is fact <V,v> reached by the relaxed plan?
+        Binary, indexed with var.id, value */
+@@ -39,6 +40,7 @@
+     /* [T_o] At what time is o used first?
+        {0, ..., |O|}, indexed with op.id */
+     std::vector<int> lp_var_id_op_time;
++    std::vector<int> lp_var_id_op_time2;
+ 
+     /* [T_f] At what time is <V,v> first achieved?
+        {0, ..., |O|}, indexed with var.id, value */
+@@ -53,15 +55,18 @@
+     std::vector<FactPair> last_state;
+ 
+     int get_var_op_used(const OperatorProxy &op);
++    int get_var_op_used2(const OperatorProxy &op);
+     int get_var_fact_reached(FactPair f);
+     int get_var_first_achiever(const OperatorProxy &op, FactPair f);
+     int get_var_op_time(const OperatorProxy &op);
++    int get_var_op_time2(const OperatorProxy &op);
+     int get_var_fact_time(FactPair f);
+     int get_constraint_id(FactPair f);
+ 
+     void create_auxiliary_variables(
+-        const TaskProxy &task_proxy, LPVariables &variables);
+-    void create_constraints(const TaskProxy &task_proxy, lp::LinearProgram &lp);
++      const TaskProxy &task_proxy, LPVariables &variables);
++    void create_constraints(
++      const TaskProxy &task_proxy, lp::LinearProgram &lp);
+ public:
+     explicit DeleteRelaxationConstraints(const plugins::Options &opts);
+ 
+@@ -70,6 +75,8 @@
+         lp::LinearProgram &lp) override;
+     virtual bool update_constraints(
+         const State &state, lp::LPSolver &lp_solver) override;
++
++    virtual void log_info(const TaskProxy &task_proxy, const std::vector<double>& solution, std::vector<double>& info) override;
+ };
+ }
+ 
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/flow_constraint_internals.cc fast-downward/src/search/operator_counting/flow_constraint_internals.cc
+--- fast-downward-original/src/search/operator_counting/flow_constraint_internals.cc	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/operator_counting/flow_constraint_internals.cc	2024-02-24 20:05:13.710480200 -0300
+@@ -0,0 +1,243 @@
++#include "flow_constraint_internals.h"
++
++#include "../lp/lp_solver.h"
++#include "../utils/logging.h"
++#include "../utils/memory.h"
++
++using namespace std;
++
++namespace operator_counting {
++FlowConstraintInternals::FlowConstraintInternals(
++    const AbstractTask &task, lp::LinearProgram &lp,
++    const FlowConstraintSettings &settings)
++    : initial_state_is_dead_end(false),
++      single_goal_state(-1),
++      abstraction_function(nullptr) {
++    TaskProxy task_proxy(task);
++    auto abstraction_and_ts = pdbs::project_task(
++        task, settings.pattern, settings.remove_dead_states, settings.use_mutexes, settings.partial_merge_states);
++    abstraction_function = utils::make_unique_ptr<pdbs::AbstractionFunction>(move(abstraction_and_ts.first));
++    const pdbs::AbstractTransitionSystem &transition_system = abstraction_and_ts.second;
++    num_abstract_states = transition_system.num_states;
++
++    if (transition_system.goal_states.empty()) {
++        initial_state_is_dead_end = true;
++    } else {
++        create_constraints(lp, transition_system, task_proxy, settings);
++    }
++}
++
++
++vector<OperatorCategory> FlowConstraintInternals::get_operator_categories(
++    const pdbs::AbstractTransitionSystem &transition_system, const TaskProxy &task_proxy,
++    const FlowConstraintSettings &settings) {
++    int num_operators = task_proxy.get_operators().size();
++    vector<OperatorCategory> operator_category(num_operators, OperatorCategory::USE_STRONG_LINKING_CONSTRAINT);
++
++    vector<int> num_self_loops(num_operators, 0);
++    for (pdbs::Transition t : transition_system.self_loops) {
++        num_self_loops[t.op_id] += 1;
++    }
++    for (int op_id : transition_system.self_loops_on_all_states) {
++        num_self_loops[op_id] += transition_system.num_states;
++    }
++
++    vector<int> num_state_changing_transitions(num_operators, 0);
++    for (pdbs::Transition t : transition_system.state_changing_transitions) {
++        num_state_changing_transitions[t.op_id] += 1;
++    }
++
++    for (int op_id = 0; op_id < num_operators; ++op_id) {
++        int num_sct = num_state_changing_transitions[op_id];
++        int num_loops = num_self_loops[op_id];
++
++        if (settings.single_transition_optimization && num_sct == 1 && num_loops == 0) {
++            operator_category[op_id] = OperatorCategory::USE_OP_COUNT_DIRECTLY;
++        }
++
++        if (settings.self_loop_optimization && num_sct == 0 && num_loops > 0) {
++            operator_category[op_id] = OperatorCategory::IGNORE_OPERATOR;
++        }
++
++        if (settings.weak_linking_constraints && num_sct > 0 && num_loops > 0) {
++            operator_category[op_id] = OperatorCategory::USE_WEAK_LINKING_CONSTRAINT;
++        }
++    }
++
++    return operator_category;
++}
++
++void FlowConstraintInternals::create_constraints(lp::LinearProgram &lp,
++                                                const pdbs::AbstractTransitionSystem &transition_system,
++                                                const TaskProxy &task_proxy,
++                                                const FlowConstraintSettings &settings) {
++    int num_operators = task_proxy.get_operators().size();
++    vector<OperatorCategory> operator_category = get_operator_categories(transition_system, task_proxy, settings);
++
++    LPVariables &variables = lp.get_variables();
++    LPConstraints &constraints = lp.get_constraints();
++    double infinity = lp.get_infinity();
++
++    /*
++      Create constraints of the type
++           sum_{t \in in(s)} Count_t - sum_{t \in out(s)} Count_t >= -[s is init]     if s is an abstract goal
++           sum_{t \in in(s)} Count_t - sum_{t \in out(s)} Count_t  = -[s is init]     otherwise
++      for all abstract states s. While doing this, we use operator_category to
++        - replace some Count_t (transition-counting variable) by Count_o (operator-counting variable),
++        - ignore other Count_t variables, and
++        - introduce Count_t variables where necessary.
++
++      Where necessary, we also create a linking constraint (weak or strong, depending on operator_category).
++        sum_{t \in trans(o)} Count_t = Count_o (strong)
++        sum_{t \in trans(o), t is no self loop} Count_t <= Count_o (weak)
++    */
++
++    state_constraint_offset = constraints.size();
++    for (int state = 0; state < transition_system.num_states; ++state) {
++        // Handle initial and goal states later.
++        constraints.emplace_back(0, 0);
++    }
++    // Set some state as current, so we don't need a special case for "no current state".
++    int intitial_id = state_constraint_offset + transition_system.initial_state;
++    current_state = transition_system.initial_state;
++    constraints[intitial_id].set_lower_bound(-1);
++    constraints[intitial_id].set_upper_bound(-1);
++
++    // Special case for single goal state for comparability to SEQ on TNF tasks
++    if (transition_system.goal_states.size() == 1) {
++        single_goal_state = transition_system.goal_states[0];
++        int goal_id = state_constraint_offset +  single_goal_state;
++        int bound = (int)constraints[goal_id].get_lower_bound() + 1;
++        constraints[goal_id].set_lower_bound(bound);
++        constraints[goal_id].set_upper_bound(bound);
++    } else {
++        assert(is_goal.empty());
++        is_goal.resize(transition_system.num_states, false);
++        for (int goal : transition_system.goal_states) {
++            is_goal[goal] = true;
++            int goal_id = state_constraint_offset +  goal;
++            constraints[goal_id].set_upper_bound(infinity);
++        }
++    }
++
++    vector<vector<int>> linking_constraint_entries(num_operators);
++    for (pdbs::Transition t: transition_system.state_changing_transitions) {
++        int op_id = t.op_id;
++        OperatorCategory category = operator_category[op_id];
++        if (category == OperatorCategory::IGNORE_OPERATOR) {
++            continue;
++        }
++        int lp_var;
++        if (category == OperatorCategory::USE_OP_COUNT_DIRECTLY) {
++            lp_var = op_id;
++        } else {
++            // Create transition-counting variable
++            lp_var = variables.size();
++            variables.emplace_back(0, infinity, 0, true);
++            linking_constraint_entries[op_id].push_back(lp_var);
++        }
++
++        /* The lp variable occurs with coefficient -1 in the constraint
++           of its source state because it is an outgoing transition. */
++        int source_constraint_id = state_constraint_offset + t.source;
++        constraints[source_constraint_id].insert(lp_var, -1);
++
++        /* The lp variable occurs with coefficient +1 in the constraint
++           of its target state because it is an incoming transition. */
++        int target_constraint_id = state_constraint_offset + t.target;
++        constraints[target_constraint_id].insert(lp_var, 1);
++    }
++    for (pdbs::Transition t: transition_system.self_loops) {
++        // Self-loops cancel out in all constraints except in the strong linking constraint.
++        int op_id = t.op_id;
++        OperatorCategory category = operator_category[op_id];
++        if (category == OperatorCategory::USE_STRONG_LINKING_CONSTRAINT) {
++            // Create transition-counting variable
++            int lp_var = variables.size();
++            variables.emplace_back(0, infinity, 0, true);
++            linking_constraint_entries[op_id].push_back(lp_var);
++        }
++    }
++    for (int op_id: transition_system.self_loops_on_all_states) {
++        // Self-loops cancel out in all constraints except in the strong linking constraint.
++        OperatorCategory category = operator_category[op_id];
++        if (category == OperatorCategory::USE_STRONG_LINKING_CONSTRAINT) {
++            // Create transition-counting variable
++            int lp_var = variables.size();
++            variables.emplace_back(0, infinity, 0, true);
++            linking_constraint_entries[op_id].push_back(lp_var);
++        }
++    }
++
++    // Create linking constraints.
++    for (int op_id = 0; op_id < num_operators; ++op_id) {
++        OperatorCategory category = operator_category[op_id];
++        if (category != OperatorCategory::USE_STRONG_LINKING_CONSTRAINT &&
++            category != OperatorCategory::USE_WEAK_LINKING_CONSTRAINT) {
++            continue;
++        }
++        if (linking_constraint_entries[op_id].empty()) {
++            // Handle constraints without entries in variable bounds.
++            if (category == OperatorCategory::USE_STRONG_LINKING_CONSTRAINT) {
++                variables[op_id].upper_bound = 0;
++            }
++            // No need to handle a weak linking constraint without entries (C_o >= 0).
++        } else {
++            constraints.emplace_back(0, 0);
++            lp::LPConstraint &linking_constraint = constraints.back();
++            if (category == OperatorCategory::USE_WEAK_LINKING_CONSTRAINT) {
++                linking_constraint.set_lower_bound(-infinity);
++            }
++            linking_constraint.insert(op_id, -1);
++            for (int entry : linking_constraint_entries[op_id]) {
++                linking_constraint.insert(entry, 1);
++            }
++        }
++    }
++}
++
++bool FlowConstraintInternals::update_constraints(
++    const State &state, lp::LPSolver &lp_solver) {
++    if (initial_state_is_dead_end) {
++        return true;
++    }
++    int current_id = state_constraint_offset + current_state;
++    int next_state = abstraction_function->get_abstract_state(state);
++    int next_id = state_constraint_offset + next_state;
++
++    if (next_state == -1) {
++        /* This state was pruned from the transition system as a dead state.
++           If it is reachable, it is a dead end. */
++        return true;
++    }
++
++    if (current_id != next_id) {
++        if (single_goal_state > -1) {
++            // Special case for SEQ comparability on TNF tasks
++            int old_bound = 0;
++            if (current_state == single_goal_state) {
++                old_bound = 1;
++            }
++            lp_solver.set_constraint_lower_bound(current_id, old_bound);
++            lp_solver.set_constraint_upper_bound(current_id, old_bound);
++            int new_bound = -1;
++            if (next_state == single_goal_state) {
++                new_bound = 0;
++            }
++            lp_solver.set_constraint_lower_bound(next_id, new_bound);
++            lp_solver.set_constraint_upper_bound(next_id, new_bound);
++        } else {
++            lp_solver.set_constraint_lower_bound(current_id, 0);
++            if (!is_goal[current_state]) {
++                lp_solver.set_constraint_upper_bound(current_id, 0);
++            }
++            lp_solver.set_constraint_lower_bound(next_id, -1);
++            if (!is_goal[next_state]) {
++                lp_solver.set_constraint_upper_bound(next_id, -1);
++            }
++        }
++        current_state = next_state;
++    }
++    return false;
++}
++}
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/flow_constraint_internals.h fast-downward/src/search/operator_counting/flow_constraint_internals.h
+--- fast-downward-original/src/search/operator_counting/flow_constraint_internals.h	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/operator_counting/flow_constraint_internals.h	2024-02-24 20:05:13.712478900 -0300
+@@ -0,0 +1,68 @@
++#ifndef OPERATOR_COUNTING_FLOW_CONSTRAINT_INTERNALS_H
++#define OPERATOR_COUNTING_FLOW_CONSTRAINT_INTERNALS_H
++
++#include "constraint_generator.h"
++
++#include "../pdbs/explicit_projection.h"
++#include "../pdbs/pattern_generator.h"
++
++#include <vector>
++
++namespace lp {
++class LPConstraint;
++struct LPVariable;
++class LinearProgram;
++}
++
++namespace operator_counting {
++using LPConstraints = named_vector::NamedVector<lp::LPConstraint>;
++using LPVariables = named_vector::NamedVector<lp::LPVariable>;
++enum class OperatorCategory {
++    IGNORE_OPERATOR,
++    USE_OP_COUNT_DIRECTLY,
++    USE_WEAK_LINKING_CONSTRAINT,
++    USE_STRONG_LINKING_CONSTRAINT
++};
++
++struct FlowConstraintSettings {
++    pdbs::Pattern pattern;
++    bool remove_dead_states;
++    bool single_transition_optimization;
++    bool self_loop_optimization;
++    bool weak_linking_constraints;
++    bool use_mutexes;
++    std::vector<std::vector<int>> partial_merge_states;
++};
++
++class FlowConstraintInternals {
++    std::vector<bool> is_goal;
++    int state_constraint_offset;
++    int current_state;
++    bool initial_state_is_dead_end;
++    int single_goal_state;
++    std::unique_ptr<pdbs::AbstractionFunction> abstraction_function;
++
++    int num_abstract_states;
++
++    std::vector<OperatorCategory> get_operator_categories(
++        const pdbs::AbstractTransitionSystem &transition_system, const TaskProxy &task_proxy,
++        const FlowConstraintSettings &settings);
++    void create_constraints(
++        lp::LinearProgram &lp,
++        const pdbs::AbstractTransitionSystem &transition_system,
++        const TaskProxy &task_proxy,
++        const FlowConstraintSettings &settings);
++public:
++    FlowConstraintInternals(
++        const AbstractTask &task,
++        lp::LinearProgram &lp,
++        const FlowConstraintSettings &settings);
++
++    bool update_constraints(const State &state, lp::LPSolver &lp_solver);
++    int get_num_abstract_states() const {
++        return num_abstract_states;
++    }
++};
++}
++
++#endif
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/flow_constraints.cc fast-downward/src/search/operator_counting/flow_constraints.cc
+--- fast-downward-original/src/search/operator_counting/flow_constraints.cc	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/operator_counting/flow_constraints.cc	2024-02-26 17:12:07.807801900 -0300
+@@ -0,0 +1,510 @@
++#include "flow_constraints.h"
++
++#include "../plugins/plugin.h"
++#include "../lp/lp_solver.h"
++#include "../utils/logging.h"
++#include "../utils/timer.h"
++#include "../utils/countdown_timer.h"
++#include "../algorithms/combinations.h"
++
++#include <unordered_map>
++
++using namespace std;
++
++namespace operator_counting {
++
++FlowConstraints::FlowConstraints(const plugins::Options &opts)
++    : pattern_generator(opts.get<shared_ptr<pdbs::PatternCollectionGenerator>>("patterns")),
++      remove_dead_states(opts.get<bool>("remove_dead_states")),
++      single_transition_optimization(opts.get<bool>("single_transition_optimization")),
++      self_loop_optimization(opts.get<bool>("self_loop_optimization")),
++      weak_linking_constraints(opts.get<bool>("weak_linking_constraints")),
++      use_mutexes(opts.get<bool>("use_mutexes")),
++      partial_merges(opts.get<int>("partial_merges")),
++      max_merge_feature_size(opts.get<int>("max_merge_feature_size")),
++      partial_merge_time_limit(opts.get<double>("partial_merge_time_limit")),
++      lp_solve_time_limit(opts.get<double>("merge_lp_solve_time_limit")),
++      merge_goal_only(opts.get<bool>("merge_goal_only")),
++      merge_preconditions(opts.get<int>("merge_preconditions")),
++      merge_effects(opts.get<int>("merge_effects")){
++}
++
++void FlowConstraints::initialize_constraints(const shared_ptr<AbstractTask> &task,
++                                            lp::LinearProgram &lp) {
++    assert(pattern_generator);
++    pdbs::PatternCollectionInformation pattern_collection_info =
++        pattern_generator->generate(task);
++    shared_ptr<pdbs::PatternCollection> patterns = pattern_collection_info.get_patterns();
++    //pattern_generator = nullptr;
++
++    int num_maximal_abstract_states = 0;
++    int num_actual_abstract_states = 0;
++    TaskProxy task_proxy(*task);
++    VariablesProxy vars = task_proxy.get_variables();
++
++    utils::Timer constraint_generation_timer;
++
++    sub_constraints.reserve(patterns->size());
++    for (const pdbs::Pattern &pattern : *patterns) {
++        FlowConstraintSettings settings;
++        settings.pattern = pattern;
++        settings.remove_dead_states = remove_dead_states;
++        settings.single_transition_optimization = single_transition_optimization;
++        settings.self_loop_optimization = self_loop_optimization;
++        settings.weak_linking_constraints = weak_linking_constraints;
++        settings.use_mutexes = use_mutexes;
++        sub_constraints.emplace_back(*task, lp, settings);
++
++        int num_abstract_states = 1;
++        for (int v : pattern) {
++            num_abstract_states *= vars[v].get_domain_size();
++        }
++        num_maximal_abstract_states += num_abstract_states;
++        num_actual_abstract_states += sub_constraints.back().get_num_abstract_states();
++    }
++
++    if (partial_merges == 1) {
++        add_partial_merge_features(*task, lp);
++    } else if (partial_merges == 2) {
++        vector<int> all_operators (task->get_num_operators());
++        for (int i = 0; i < task->get_num_operators(); i++)
++            all_operators[i] = i;
++        add_op_merge_features(*task, lp, all_operators);
++    } else {
++        add_op_merge_features(*task, lp, observations);
++    }
++
++    cout << "Flow constraints abstract states for original patterns: " << num_maximal_abstract_states << endl;
++    cout << "Flow constraints actual abstract states: " << num_actual_abstract_states << endl;
++    cout << "Flow constraints removed abstract states: " << num_maximal_abstract_states - num_actual_abstract_states << endl;
++    cout << "Flow constraints generation time: " << constraint_generation_timer << endl;
++}
++
++struct HashPattern {
++    size_t operator()(const pdbs::Pattern &v) const {
++        size_t key = v.size();
++        for (auto &i : v) {
++            key ^= i + 0x9e3779b9 + (key << 6) + (key >> 2);
++        }
++        return key;
++    }
++};
++
++static bool detect_unrepresented_features(const lp::LinearProgram &lp,
++                                   const TaskProxy &task_proxy,
++                                   double lp_solve_time_limit,
++                                   const utils::CountdownTimer &remaining_time,
++                                   vector<int> &operator_handled,
++                                   int feature_size,
++                                   vector<vector<FactPair>> &required_features,
++                                   bool &found_operator_above_feature_size) {
++    // HACK: hard-coded for now.
++#ifdef HAS_CPLEX
++    lp::LPSolver lp_solver(lp::LPSolverType::CPLEX);
++#else
++    lp::LPSolver lp_solver(lp::LPSolverType::SOPLEX);
++#endif
++    vector<double> solution;
++    lp_solver.load_problem(lp);
++    utils::Timer lp_solve_timer;
++    lp_solver.solve();
++    solution = lp_solver.extract_solution();
++    if (lp_solve_timer() > lp_solve_time_limit) {
++        cout << "Solving the LP took " << lp_solve_timer << " which exceeds the time limit of "
++             << lp_solve_time_limit << "s. Stopping feature detection."<< endl;
++        return false;
++    }
++    double EPSILON = 0.001;
++    OperatorsProxy operators = task_proxy.get_operators();
++    VariablesProxy vars = task_proxy.get_variables();
++    int num_variables = vars.size();
++    assert(solution.size() >= operators.size());
++    bool added_feature = false;
++    for (OperatorProxy op : operators) {
++        if (remaining_time.is_expired()) {
++            cout << "Time limit for partial merges exceeded."<< endl;
++            return false;
++        }
++        if ((solution[op.get_id()] > EPSILON && operator_handled[op.get_id()] == 0) || operator_handled[op.get_id()] == 2) {
++            vector<int> effect_on_var(num_variables, -1);
++            for (EffectProxy effect : op.get_effects()) {
++                int var = effect.get_fact().get_variable().get_id();
++                effect_on_var[var] = effect.get_fact().get_value();
++            }
++            vector<FactPair> prevail_conditions;
++            vector<FactPair> real_preconditions;
++            vector<FactPair> all_preconditions;
++            for (FactProxy precondition : op.get_preconditions()) {
++                int var = precondition.get_variable().get_id();
++                int pre = precondition.get_value();
++                int post = effect_on_var[var];
++                if (post == -1 || post == pre) {
++                    prevail_conditions.emplace_back(var, pre);
++                    all_preconditions.emplace_back(var, pre);
++                } else {
++                    real_preconditions.emplace_back(var, pre);
++                    all_preconditions.emplace_back(var, pre);
++                }
++            }
++            int num_preconditions = all_preconditions.size();
++            if (num_preconditions > feature_size && !prevail_conditions.empty()) {
++                found_operator_above_feature_size = true;
++            }
++            if (operator_handled[op.get_id()] == 2) {
++                Combinations<FactPair> combos;
++                for (vector<FactPair> feature : combos.get_combinations(all_preconditions, feature_size)) {
++                    sort(feature.begin(), feature.end());
++                    required_features.push_back(feature);
++                    added_feature = true;
++                }
++                operator_handled[op.get_id()] = 1;
++                continue;
++            }
++            for (FactPair prevail : prevail_conditions) {
++                for (FactPair pre : real_preconditions) {
++                    int num_extra_features = min(feature_size - 2, num_preconditions - 2);
++                    Combinations<FactPair> combos;
++                    for (vector<FactPair> feature : combos.get_combinations(all_preconditions, num_extra_features)) {
++                        // HACK: could remove both from all_preconditions before, but meh.
++                        bool useful_feature = true;
++                        for (FactPair f : feature) {
++                            if (f == prevail || f == pre) {
++                                useful_feature = false;
++                                break;
++                            }
++                        }
++                        if (!useful_feature) {
++                            continue;
++                        }
++                        feature.push_back(prevail);
++                        feature.push_back(pre);
++                        sort(feature.begin(), feature.end());
++                        required_features.push_back(feature);
++                        added_feature = true;
++                    }
++                }
++            }
++            operator_handled[op.get_id()] = 1;
++        }
++    }
++    return added_feature;
++}
++
++
++static void add_features(unordered_map<pdbs::Pattern, vector<vector<int>>, HashPattern> &represented_features,
++        vector<FactPair> &all_facts, int max_feature_size) {
++    if (all_facts.size() < 2)
++        return;
++    // Create patterns
++    for (int feature_size = 2; feature_size <= max_feature_size; feature_size++) {
++        Combinations<FactPair> combos;
++        for (vector<FactPair> feature : combos.get_combinations(all_facts, feature_size)) {
++            sort(feature.begin(), feature.end());
++            pdbs::Pattern pattern;
++            vector<int> state;
++            for (FactPair fact : feature) {
++                pattern.push_back(fact.var);
++                state.push_back(fact.value);
++            }
++            vector<vector<int>> &represented_pattern_features = represented_features[pattern];
++            if (find(represented_pattern_features.begin(), represented_pattern_features.end(), state) == represented_pattern_features.end()) {
++                represented_pattern_features.push_back(state);
++            }
++        }
++    }
++}
++
++
++void FlowConstraints::add_op_merge_features(const AbstractTask &task,
++                                            lp::LinearProgram &lp,
++                                            const vector<int> &operator_ids) {
++    TaskProxy task_proxy(task);
++    OperatorsProxy ops = task_proxy.get_operators();
++    FlowConstraintSettings settings;
++    settings.remove_dead_states = remove_dead_states;
++    settings.single_transition_optimization = single_transition_optimization;
++    settings.self_loop_optimization = self_loop_optimization;
++    settings.weak_linking_constraints = weak_linking_constraints;
++    settings.use_mutexes = use_mutexes;
++    unordered_map<pdbs::Pattern, vector<vector<int>>, HashPattern> represented_features;
++
++    vector<bool> goal_vars(task_proxy.get_variables().size(), false);
++    if (merge_goal_only) {
++        for (FactProxy goal : task_proxy.get_goals()) {
++            goal_vars[goal.get_variable().get_id()] = true;
++        }
++    }
++
++    // Precondition features
++    if (merge_preconditions == 1) {
++        // Intra-operator
++        for (int id : operator_ids) {
++            vector<FactPair> all_facts;
++            for (FactProxy pre : ops[id].get_preconditions()) {
++                if (!merge_goal_only || goal_vars[pre.get_variable().get_id()])
++                    all_facts.push_back(pre.get_pair());
++            }
++            add_features(represented_features, all_facts, max_merge_feature_size);
++        }
++    } else if (merge_preconditions == 2) {
++        // Inter-operator
++        vector<FactPair> all_facts;
++        for (int id : operator_ids) {
++            for (FactProxy pre : ops[id].get_preconditions()) {
++                if (!merge_goal_only || goal_vars[pre.get_variable().get_id()])
++                    all_facts.push_back(pre.get_pair());
++            }
++        }
++        add_features(represented_features, all_facts, max_merge_feature_size);
++    } else if (merge_preconditions == 3) {
++        // Intra-operator
++        for (int id : operator_ids) {
++            vector<FactPair> all_facts;
++            for (FactProxy pre : ops[id].get_preconditions()) {
++                if (!merge_goal_only || goal_vars[pre.get_variable().get_id()])
++                    all_facts.push_back(pre.get_pair());
++            }
++            for (EffectProxy eff : ops[id].get_effects()) {
++                if (!merge_goal_only || goal_vars[eff.get_fact().get_variable().get_id()])
++                    all_facts.push_back(eff.get_fact().get_pair());
++            }
++            add_features(represented_features, all_facts, max_merge_feature_size);
++        }
++    } else if (merge_preconditions == 4) {
++        // Inter-operator
++        vector<FactPair> all_facts;
++        for (int id : operator_ids) {
++            for (FactProxy pre : ops[id].get_preconditions()) {
++                if (!merge_goal_only || goal_vars[pre.get_variable().get_id()])
++                    all_facts.push_back(pre.get_pair());
++            }
++            for (EffectProxy eff : ops[id].get_effects()) {
++                if (!merge_goal_only || goal_vars[eff.get_fact().get_variable().get_id()])
++                    all_facts.push_back(eff.get_fact().get_pair());
++            }
++        }
++        add_features(represented_features, all_facts, max_merge_feature_size);
++    }
++
++    // Effect features
++    if (merge_effects == 1) {
++        // Intra-operator
++        for (int id : operator_ids) {
++            vector<FactPair> all_facts;
++            for (EffectProxy eff : ops[id].get_effects()) {
++                if (!merge_goal_only || goal_vars[eff.get_fact().get_variable().get_id()])
++                    all_facts.push_back(eff.get_fact().get_pair());
++            }
++            add_features(represented_features, all_facts, max_merge_feature_size);
++        }
++    } else if (merge_effects == 2) {
++        // Inter-operator
++        vector<FactPair> all_facts;
++        for (int id : operator_ids) {
++            for (EffectProxy eff : ops[id].get_effects()) {
++                if (!merge_goal_only || goal_vars[eff.get_fact().get_variable().get_id()])
++                    all_facts.push_back(eff.get_fact().get_pair());
++            }
++        }
++        add_features(represented_features, all_facts, max_merge_feature_size);
++    }
++
++    // Add constraints to represented features
++    //sub_constraints.reserve(patterns->size());
++    cout << "Patterns: " << endl;
++    for (const auto &entry : represented_features) {
++        const pdbs::Pattern &pattern = entry.first;
++        const vector<vector<int>> &states = entry.second;
++        cout << pattern << ": " << states << endl;
++        FlowConstraintSettings settings;
++        settings.pattern = pattern;
++        settings.remove_dead_states = remove_dead_states;
++        settings.single_transition_optimization = single_transition_optimization;
++        settings.self_loop_optimization = self_loop_optimization;
++        settings.weak_linking_constraints = weak_linking_constraints;
++        settings.use_mutexes = use_mutexes;
++        settings.partial_merge_states = states;
++        // Creates projection
++        sub_constraints.emplace_back(task, lp, settings);
++    }
++}
++
++void FlowConstraints::add_partial_merge_features(const AbstractTask &task,
++                                                lp::LinearProgram &lp) {
++    utils::Timer partial_merge_timer;
++    utils::CountdownTimer partial_merge_remaining_time(partial_merge_time_limit);
++    TaskProxy task_proxy(task);
++    LPVariables &variables = lp.get_variables();
++    LPConstraints &constraints = lp.get_constraints();
++
++    int num_base_variables = variables.size();
++    int num_base_constraints = constraints.size();
++    int num_base_sub_constraints = sub_constraints.size();
++
++    int num_iterations = 0;
++    int num_added_features = 0;
++    int feature_size = 2;
++
++    unordered_map<pdbs::Pattern, vector<vector<int>>, HashPattern>
++        represented_features;
++    vector<vector<FactPair>> required_features;
++
++    while (feature_size <= max_merge_feature_size && !partial_merge_remaining_time.is_expired()) {
++        cout << "Partially merging features of size " << feature_size << endl;
++        vector<int> operator_handled(task_proxy.get_operators().size(), 0);
++        for (int id : observations)
++            operator_handled[id] = 2;
++
++        bool found_operator_above_feature_size = false;
++        do {
++            // Search for new features
++            bool added_feature = detect_unrepresented_features(lp, task_proxy, lp_solve_time_limit,
++                                             partial_merge_remaining_time,
++                                             operator_handled, feature_size, required_features,
++                                             found_operator_above_feature_size);
++            if (!added_feature || partial_merge_remaining_time.is_expired())
++                break;
++
++            ++num_iterations;
++
++            // Remove duplicates
++            for (const vector<FactPair> &feature : required_features) {
++                pdbs::Pattern pattern;
++                vector<int> state;
++                for (FactPair fact : feature) {
++                    pattern.push_back(fact.var);
++                    state.push_back(fact.value);
++                }
++                vector<vector<int>> &represented_pattern_features = represented_features[pattern];
++                if (find(represented_pattern_features.begin(), represented_pattern_features.end(), state) == represented_pattern_features.end()) {
++                    represented_pattern_features.push_back(state);
++                    ++num_added_features;
++                }
++            }
++            required_features.clear();
++
++            // Erase old constraints 
++            variables.erase(variables.begin() + num_base_variables, variables.end());
++            constraints.erase(constraints.begin() + num_base_constraints, constraints.end());
++            sub_constraints.erase(sub_constraints.begin() + num_base_sub_constraints, sub_constraints.end());
++
++            // Add constraints to represented features
++            cout << "Patterns: " << endl;
++            for (const auto &entry : represented_features) {
++                if (partial_merge_remaining_time.is_expired()) {
++                    break;
++                }
++                const pdbs::Pattern &pattern = entry.first;
++                const vector<vector<int>> &states = entry.second;
++                cout << pattern << ": " << states << endl;
++                FlowConstraintSettings settings;
++                settings.pattern = pattern;
++                settings.remove_dead_states = remove_dead_states;
++                settings.single_transition_optimization = single_transition_optimization;
++                settings.self_loop_optimization = self_loop_optimization;
++                settings.weak_linking_constraints = weak_linking_constraints;
++                settings.use_mutexes = use_mutexes;
++                settings.partial_merge_states = states;
++                // Magic done here
++                sub_constraints.emplace_back(task, lp, settings);
++            }
++        } while (found_operator_above_feature_size);
++        ++feature_size;
++    }
++
++    cout << "Flow constraints partial merge iterations: " << num_iterations << endl;
++    cout << "Flow constraints partial merge added features: " << num_added_features << endl;
++    cout << "Flow constraints partial merge time: " << partial_merge_timer << endl;
++}
++
++bool FlowConstraints::update_constraints(
++    const State &state, lp::LPSolver &lp_solver) {
++    for (FlowConstraintInternals &constraint : sub_constraints) {
++        if (constraint.update_constraints(state, lp_solver)) {
++            return true;
++        }
++    }
++    return false;
++}
++
++class FlowConstraintsFeature : public plugins::TypedFeature<ConstraintGenerator, FlowConstraints> {
++public:
++    FlowConstraintsFeature() : TypedFeature("flow_constraints") {
++        add_option<shared_ptr<pdbs::PatternCollectionGenerator>>(
++            "patterns",
++            "pattern generation method",
++            "systematic(1)");
++
++        add_option<bool>(
++            "remove_dead_states",
++            "remove unreachable and irrelevant states from all abstractions "
++            "before generating constraints",
++            "true");
++
++        add_option<bool>(
++            "single_transition_optimization",
++            "do not introduce transition-counting variables and linking constraints "
++            "if an operator only induces one transition in an abstraction",
++            "true");
++
++        add_option<bool>(
++            "self_loop_optimization",
++            "do not introduce transition-counting variables and linking constraints "
++            "if an operator only induces self loops in an abstraction",
++            "true");
++
++        add_option<bool>(
++            "weak_linking_constraints",
++            "use weak linking constraints instead of strong linking constraints in cases "
++            "where this does not lead to lower heuristic quality",
++            "true");
++
++        add_option<bool>(
++            "use_mutexes",
++            "remove states from abstract transition systems that violate mutex information",
++            "true");
++
++        add_option<int>(
++            "partial_merges",
++            "incremental detection of partial merges",
++            "1");
++
++        add_option<int>(
++            "max_merge_feature_size",
++            "maximal size of features added with partial merges",
++            "2",
++            plugins::Bounds("2", "infinity"));
++
++        add_option<double>(
++            "partial_merge_time_limit",
++            "Stop merging facts after x seconds",
++            "infinity",
++            plugins::Bounds("0.0", "infinity"));
++
++        add_option<double>(
++            "merge_lp_solve_time_limit",
++            "Stop merging facts if solving the LP once takes more than x seconds",
++            "infinity",
++            plugins::Bounds("0.0", "infinity"));
++
++        add_option<bool>(
++            "merge_goal_only",
++            "Include only variables that are mentioned in the goal",
++            "false");
++
++        add_option<int>(
++            "merge_preconditions",
++            "Include features mentioned in preconditions",
++            "0",
++            plugins::Bounds("0", "4"));
++
++        add_option<int>(
++            "merge_effects",
++            "Include features mentioned in effects",
++            "0",
++            plugins::Bounds("0", "2"));
++    }
++};
++
++static plugins::FeaturePlugin<FlowConstraintsFeature> _plugin;
++}
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/flow_constraints.h fast-downward/src/search/operator_counting/flow_constraints.h
+--- fast-downward-original/src/search/operator_counting/flow_constraints.h	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/operator_counting/flow_constraints.h	2024-02-24 20:05:13.717592300 -0300
+@@ -0,0 +1,50 @@
++#ifndef OPERATOR_COUNTING_FLOW_CONSTRAINTS_H
++#define OPERATOR_COUNTING_FLOW_CONSTRAINTS_H
++
++#include "constraint_generator.h"
++#include "flow_constraint_internals.h"
++
++#include "../pdbs/pattern_generator.h"
++
++#include <vector>
++
++namespace plugins {
++class Options;
++}
++
++namespace operator_counting {
++class FlowConstraints : public ConstraintGenerator {
++    std::shared_ptr<pdbs::PatternCollectionGenerator> pattern_generator;
++    bool remove_dead_states;
++    bool single_transition_optimization;
++    bool self_loop_optimization;
++    bool weak_linking_constraints;
++    bool use_mutexes;
++
++    int partial_merges;
++    int max_merge_feature_size;
++    double partial_merge_time_limit;
++    double lp_solve_time_limit;
++
++    bool merge_goal_only;
++    int merge_preconditions;
++    int merge_effects;
++
++    std::vector<FlowConstraintInternals> sub_constraints;
++    void add_partial_merge_features(
++        const AbstractTask &task,
++        lp::LinearProgram &lp);
++    void add_op_merge_features(
++        const AbstractTask &task,
++        lp::LinearProgram &lp,
++        const std::vector<int> &operator_ids);
++public:
++    explicit FlowConstraints(const plugins::Options &opts);
++    virtual void initialize_constraints(const std::shared_ptr<AbstractTask> &task,
++                                        lp::LinearProgram &lp) override;
++    virtual bool update_constraints(const State &state,
++                                    lp::LPSolver &lp_solver) override;
++};
++}
++
++#endif
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/lm_cut_constraints.cc fast-downward/src/search/operator_counting/lm_cut_constraints.cc
+--- fast-downward-original/src/search/operator_counting/lm_cut_constraints.cc	2023-11-15 18:14:39.883896700 -0300
++++ fast-downward/src/search/operator_counting/lm_cut_constraints.cc	2024-02-24 20:05:13.719584000 -0300
+@@ -8,23 +8,79 @@
+ #include "../utils/memory.h"
+ 
+ #include <cassert>
++#include <map>
+ 
+ using namespace std;
+ 
+ namespace operator_counting {
++
++#define LM_NO_NOISE 0
++#define LM_NOISY_DIV 1
++#define LM_NOISY_B 2
++#define LM_NOISY_HARD 3
++
++LMCutConstraints::LMCutConstraints(const plugins::Options &opts)
++    : noisy(opts.get<int>("noisy")) {
++}
++
+ void LMCutConstraints::initialize_constraints(
+-    const shared_ptr<AbstractTask> &task, lp::LinearProgram &) {
++    const shared_ptr<AbstractTask> &task, lp::LinearProgram &lp) {
+     TaskProxy task_proxy(*task);
+     landmark_generator =
+         utils::make_unique_ptr<lm_cut_heuristic::LandmarkCutLandmarks>(task_proxy);
++    sort(observations.begin(), observations.end());
++    LPVariables& variables = lp.get_variables();
++    if (noisy == LM_NOISY_B) {
++        // Use B variables
++        b_vars.clear();
++        int last_id = -1;
++        for (int obs_id : observations) {
++            if (obs_id == last_id)
++                continue;
++            last_id = obs_id;
++            b_vars[obs_id] = variables.size();
++            variables.emplace_back(0, 1, 0, true);
++        }
++    }
+ }
+ 
+ 
+ bool LMCutConstraints::update_constraints(const State &state,
+                                           lp::LPSolver &lp_solver) {
+     assert(landmark_generator);
+-    named_vector::NamedVector<lp::LPConstraint> constraints;
++    LPConstraints constraints;
+     double infinity = lp_solver.get_infinity();
++    TaskProxy task_proxy = state.get_task();
++    
++    // Get occurrences of each observtion
++    map<int, int> occur;
++    for (int obs_id : observations)
++        occur[obs_id]++;
++    vector<int> obs;
++
++    if (noisy == LM_NO_NOISE) {
++         for (auto it = occur.begin(); it != occur.end(); it++) {
++            obs.push_back(it->first);
++        }
++        landmark_generator = utils::make_unique_ptr<lm_cut_heuristic::LandmarkCutLandmarks>(task_proxy, obs, true);
++        bool dead_end = landmark_generator->compute_landmarks(
++            state, nullptr,
++            [&](const vector<int> &op_ids, int /*cost*/) {
++                cout << "Landmarks: " << endl;
++                constraints.emplace_back(1.0, infinity);
++                lp::LPConstraint &landmark_constraint = constraints.back();
++                for (int op_id : op_ids) {
++                    cout << op_id << " - " << task_proxy.get_operators()[op_id].get_name() << endl;
++                    landmark_constraint.insert(op_id, 1.0);
++                }
++            });
++        cout << "Hard observation landmark computation done." << endl;
++        if (dead_end)
++            return true;
++        lp_solver.add_temporary_constraints(constraints);
++        return false;
++    }
++
+ 
+     bool dead_end = landmark_generator->compute_landmarks(
+         state, nullptr,
+@@ -35,13 +91,51 @@
+                 landmark_constraint.insert(op_id, 1.0);
+             }
+         });
++    cout << "Goal landmark computation done." << endl;
+ 
+-    if (dead_end) {
++    if (dead_end)
+         return true;
+-    } else {
+-        lp_solver.add_temporary_constraints(constraints);
+-        return false;
++    
++    int var_id = task_proxy.get_operators().size(); // Y_obs
++    for (auto it = occur.begin(); it != occur.end(); it++) {
++        // Change goal
++        obs.clear();
++        obs.push_back(it->first);
++        landmark_generator = utils::make_unique_ptr<lm_cut_heuristic::LandmarkCutLandmarks>(task_proxy, obs, false);
++        dead_end = landmark_generator->compute_landmarks(
++            state, nullptr,
++            [&](const vector<int> &op_ids, int /*cost*/) {
++                cout << "Landmarks: " << endl;
++                constraints.emplace_back(0, infinity);
++                if (noisy == LM_NOISY_DIV)
++                    // Divide: >= Y_obs / occur(obs)
++                    constraints.back().insert(var_id, -1.0/it->second);
++                else if (noisy == LM_NOISY_B)
++                    // B var: >= B_obs
++                    constraints.back().insert(b_vars[it->first], -1.0);
++                else if (noisy == LM_NOISY_HARD)
++                    // Default: 1
++                    constraints.back().set_lower_bound(1);
++                lp::LPConstraint &landmark_constraint = constraints.back();
++                for (int op_id : op_ids) {
++                    cout << op_id << " - " << task_proxy.get_operators()[op_id].get_name() << endl;
++                    landmark_constraint.insert(op_id, 1.0);
++                }
++            });
++        cout << "Soft observation landmark computation done." << endl;
++        if (noisy == LM_NOISY_B) {
++            // 0 <= B_obs * M - Y_obs
++            constraints.emplace_back(0, infinity);
++            constraints.back().insert(var_id, -1.0);
++            constraints.back().insert(b_vars[it->first], it->second + 1.0);
++        }
++        if (dead_end)
++            return true;
++        var_id++;
+     }
++
++    lp_solver.add_temporary_constraints(constraints);
++    return false;
+ }
+ 
+ class LMCutConstraintsFeature : public plugins::TypedFeature<ConstraintGenerator, LMCutConstraints> {
+@@ -72,11 +166,12 @@
+                 "2268-2274",
+                 "AAAI Press",
+                 "2013"));
+-    }
+ 
+-    virtual shared_ptr<LMCutConstraints> create_component(const plugins::Options &, const utils::Context &) const override {
+-        return make_shared<LMCutConstraints>();
++        add_option<int>("noisy",
++            "0 to default approach, 1 to divide landmark minimum, 2 to use B variables, 3 to force all observations",
++            "0");
+     }
++
+ };
+ 
+ static plugins::FeaturePlugin<LMCutConstraintsFeature> _plugin;
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/lm_cut_constraints.h fast-downward/src/search/operator_counting/lm_cut_constraints.h
+--- fast-downward-original/src/search/operator_counting/lm_cut_constraints.h	2023-11-15 18:14:39.883896700 -0300
++++ fast-downward/src/search/operator_counting/lm_cut_constraints.h	2024-02-24 20:05:13.721578400 -0300
+@@ -4,17 +4,34 @@
+ #include "constraint_generator.h"
+ 
+ #include <memory>
++#include <unordered_map>
+ 
+ namespace lm_cut_heuristic {
+ class LandmarkCutLandmarks;
+ }
+ 
++namespace lp {
++class LPConstraint;
++struct LPVariable;
++class LinearProgram;
++}
++
++namespace plugins {
++class Options;
++}
++
+ namespace operator_counting {
++using LPConstraints = named_vector::NamedVector<lp::LPConstraint>;
++using LPVariables = named_vector::NamedVector<lp::LPVariable>;
++
+ class LMCutConstraints : public ConstraintGenerator {
+     std::unique_ptr<lm_cut_heuristic::LandmarkCutLandmarks> landmark_generator;
++    std::unordered_map<int, int> b_vars;
++    int noisy;
+ public:
+-    virtual void initialize_constraints(
+-        const std::shared_ptr<AbstractTask> &task, lp::LinearProgram &lp) override;
++    explicit LMCutConstraints(const plugins::Options &opts);
++    virtual void initialize_constraints(const std::shared_ptr<AbstractTask> &task,
++                                        lp::LinearProgram &lp) override;
+     virtual bool update_constraints(const State &state,
+                                     lp::LPSolver &lp_solver) override;
+ };
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/oc_single_shot_heuristic.cc fast-downward/src/search/operator_counting/oc_single_shot_heuristic.cc
+--- fast-downward-original/src/search/operator_counting/oc_single_shot_heuristic.cc	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/operator_counting/oc_single_shot_heuristic.cc	2024-02-24 20:05:13.723572500 -0300
+@@ -0,0 +1,497 @@
++#include "oc_single_shot_heuristic.h"
++
++#include "constraint_generator.h"
++
++#include "../plugins/plugin.h"
++
++#include "../utils/markup.h"
++
++#include <cmath>
++#include <fstream>
++#include <algorithm>
++#include <cctype>
++#include <locale>
++
++using namespace std;
++
++// trim from start (in place)
++static inline void ltrim(std::string &s) {
++    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](int ch) {
++        return !std::isspace(ch);
++    }));
++}
++
++// trim from end (in place)
++static inline void rtrim(std::string &s) {
++    s.erase(std::find_if(s.rbegin(), s.rend(), [](int ch) {
++        return !std::isspace(ch);
++    }).base(), s.end());
++}
++
++// trim from both ends (in place)
++static inline void trim(std::string &s) {
++    ltrim(s);
++    rtrim(s);
++}
++
++using namespace std;
++
++namespace operator_counting {
++
++utils::Timer lp_timer;
++
++OCSingleShotHeuristic::OCSingleShotHeuristic(const plugins::Options &opts)
++    : Heuristic(opts),
++      constraint_generators(
++          opts.get_list<shared_ptr<ConstraintGenerator>>("constraint_generators")),
++      lp_h(opts.get<lp::LPSolverType>("lpsolver")),
++      lp_h_c(opts.get<lp::LPSolverType>("lpsolver")),
++      lp_h_s(opts.get<lp::LPSolverType>("lpsolver")),
++      calculate_h(opts.get<bool>("calculate_h")),
++      calculate_h_c(opts.get<bool>("calculate_h_c")),
++      calculate_h_s(opts.get<bool>("calculate_h_s")),
++      filter(opts.get<int>("filter")),
++      h_obs(opts.get<int>("h_obs")),
++      mip(opts.get<bool>("mip")),
++      soft_weight(opts.get<int>("weights")) {
++    // Initialize map to convert operator name to operator ID
++    map_operators(false);
++    // Read observations from file and prune invalid
++    load_observations();
++    prune_observations();
++    // Start timer
++    lp_timer.reset();
++    lp_timer.resume();
++}
++
++void OCSingleShotHeuristic::add_observation_variables(LPVariables &variables, LPConstraints &constraints) {
++    assert(obs_var_offset == 0);
++    // Create observation variables
++    vector<string> obs;
++    for (auto entry : valid_obs_occurrences)
++        obs.push_back(entry.first);
++    sort(obs.begin(), obs.end(), [&](string &a, string &b) {
++            return (op_indexes[a] < op_indexes[b]);
++        });
++    double infinity = lp_h.get_infinity();
++    obs_var_offset = variables.size();
++    for (string &op : obs) {
++        // Determine how many times the same observed operation occurs.
++        int count_obs = valid_obs_occurrences[op];
++        cout << "constraint " << op << ": " << std::to_string(op_indexes[op]) << endl;
++        int var_id = variables.size();
++        variables.push_back(lp::LPVariable(0, count_obs, -weights[op], mip));
++        lp::LPConstraint lt_y(0, infinity);
++        lt_y.insert(op_indexes[op], 1);
++        lt_y.insert(var_id, -1);
++        constraints.push_back(lt_y);
++    }
++}
++
++void OCSingleShotHeuristic::add_observation_hard_constraint(LPVariables &variables, LPConstraints &constraints) {
++    assert(obs_var_offset > 0);
++    double infinity = lp_h.get_infinity();
++    int filter = (int)ceil(this->filter * 0.1 * observations.size());
++    int k = max(0, filter - num_pruned_observations);
++    lp::LPConstraint constraint(num_valid_observations - k, infinity);
++    for (uint i = 0; i < valid_obs_occurrences.size(); i++) {
++        constraint.insert(obs_var_offset + i, 1);
++        variables[obs_var_offset + i].objective_coefficient = 0;
++    }
++    constraints.push_back(constraint);
++}
++
++void OCSingleShotHeuristic::set_variable_weights(LPVariables &variables) {
++    if (soft_weight == 1) {
++        double weight_per_op = 1.0 / 1000;
++        for (auto it = observations.begin(); it != observations.end(); ++it)
++            if (op_indexes.find(*it) != op_indexes.end())
++                weights[*it] = weight_per_op;
++    } else if (soft_weight == 2) {
++        double weight_per_op = 1.0;
++        for (auto it = observations.begin(); it != observations.end(); ++it)
++            if (op_indexes.find(*it) != op_indexes.end())
++                weights[*it] = weight_per_op;
++    } else if (soft_weight == 3) {
++        double weight_per_op = 1.0;
++        double weight = weight_per_op;
++        for (auto it = observations.begin(); it != observations.end(); ++it) {
++            if (op_indexes.find(*it) != op_indexes.end()) {
++                max_weight += weight;
++                weights[*it] += weight;
++                weight += weight_per_op;
++            }
++        }
++        for (auto it = obs_occurrences.begin(); it != obs_occurrences.end(); ++it)
++            weights[it->first] /= it->second;
++    }
++    int var_id = 0;
++    for (auto it = valid_obs_occurrences.begin(); it != valid_obs_occurrences.end(); it++) {
++        variables[var_id].objective_coefficient = weights[it->first];
++        var_id++;
++    }
++}
++
++void OCSingleShotHeuristic::map_operators(bool show) {
++    if (show) {
++        cout << endl << string(80, '*') << endl;
++        cout << "# Mapping X -> op: " << endl;
++    }
++    int i = 0;
++    for (OperatorProxy op : task_proxy.get_operators()) {
++        // Caching operator variable indexes
++        std::string op_name (op.get_name());
++        for (size_t i = 0; i< op.get_name().size(); ++i) {
++            op_name[i] = tolower(op_name.c_str()[i]);
++        }
++        op_indexes[op_name] = i;
++        if (show) {
++            cout << "["<< op_name<< "]: " << op_indexes[op_name] << endl;
++        }
++        i++;
++    }
++    if (show) {
++        cout << string(80, '*') << endl;
++    }
++}
++
++void OCSingleShotHeuristic::show_variables_and_objective(const LPVariables &variables) {
++    cout << endl << string(80, '*') << endl;
++    cout << "# Variables(" << variables.size() << "): " << endl;
++    for (int i = 0; i < (int) variables.size(); ++i) {
++        cout << "X[" << i << "] = Variable('X_" << i << "'";
++        cout << ", lb=" << variables[i].lower_bound;
++        cout << ", ub=" << variables[i].upper_bound;
++        cout << ", cost[" << i << "] = " << variables[i].objective_coefficient << endl;
++    }
++    cout << string(80, '*') << endl;
++    cout << endl << string(80, '*') << endl;
++    cout << "# Objective function: " << endl;
++    cout << "obj = Objective(";
++    for (int i = 0; i < (int) variables.size(); ++i) {
++        cout << "cost[" << i << "] * X[" << i << "]";
++        if (i < (int) variables.size() - 1) {
++            cout << " + ";
++        }
++    }
++    cout << ", direction='min')" << endl;
++    cout << string(80, '*') << endl;
++}
++
++void OCSingleShotHeuristic::load_observations() {
++    // Read observations from file
++    cout << endl << string(80, '*') << endl;
++    cout << std::endl << "Load observations" << std::endl;
++    ifstream obs_file;
++    obs_file.open("obs.dat");
++    if(obs_file.is_open()){
++        while(!obs_file.eof()) {
++            string obs;
++            getline(obs_file, obs);
++            trim(obs);
++            if(!obs.empty() && obs[0]!=';') {
++                obs = obs.substr(1,obs.length()-2);
++                std::string obs_name (obs);
++                for (size_t i = 0; i< obs.size(); ++i) {
++                    obs_name[i] = tolower(obs.c_str()[i]);
++                }
++                cout << "Observation: " << obs_name << endl;
++                observations.push_back(obs_name);
++            }
++        }
++    }
++    cout << endl << string(80, '*') << endl;
++    obs_file.close();
++    // =-=-=-=-= Each observation is associated with its number of occurrences. =-=-=-=-= //
++    obs_occurrences.clear();
++    for(auto it = observations.begin() ; it != observations.end(); ++it) {
++        obs_occurrences[*it]++;
++    }
++}
++
++void OCSingleShotHeuristic::prune_observations() { 
++    // Debugging output (cumulative: appends new info with each call)
++    std::fstream outfile("debug/observation_sanity.txt", std::ios::out|std::ios::app) ;
++    // Set output stream (set to std::cout to print to terminal)
++    std::ostream& outstream = outfile;
++    // Reinitialize class variables for invalid (unmapped) observations.
++    num_pruned_observations = 0;
++    pruned_observations.clear();
++    valid_obs_occurrences.clear();
++    vector<string> invalid_operators;
++    int num_invalid_operators = 0;
++    //outstream << endl << string(80, '*') << endl;
++    //outstream << "Enforcing observation constraints" << std::endl;
++    outstream << endl<< "-+-"; // marks start
++    for (auto it = obs_occurrences.begin(); it != obs_occurrences.end(); ++it) {
++        // Observation is mappable?
++        // If not: ignore observation, storing it in a separate list.
++        if (op_indexes.find(it->first) == op_indexes.end()) {
++            //outstream << "[INVALID OP] " << op << endl;
++            invalid_operators.push_back(it->first);
++            num_invalid_operators += 1;
++            num_pruned_observations += it->second;
++        } else {
++            valid_obs_occurrences[it->first] = it->second;
++            num_valid_observations += it->second;
++        }
++    }
++    // =-=-=-=-= Report on pruned and invalid operators/observations. =-=-=-=-= //
++    // Basic structure:
++    // Print invalid observations, number of operators and total number of observations.
++    // Last line holds number of observations and number of invalid observations,
++    //  followed by any relevant tags.
++    for (int i = 0 ; i < num_invalid_operators; i++) {
++        outstream << endl<< "[INVALID OP] " << invalid_operators[i] << ": " << obs_occurrences[invalid_operators[i]] <<" time(s).";
++    }
++    if (num_pruned_observations > 0) {
++        outstream << endl << "# mappable operators: " << op_indexes.size() << endl;
++        outstream << "Obs - Total: " << observations.size() << " | Invalid: " << num_pruned_observations;
++    }
++    outfile.flush();
++    outfile.close();
++}
++
++int OCSingleShotHeuristic::compute_heuristic(const State &state) {
++    // Results
++    double result, result_c, result_s;
++    result = result_c = result_s = 0 / 0;
++
++    // Constraints
++    double infinity = lp_h.get_infinity();
++    LPVariables variables_temp;
++    LPConstraints constraints_temp;
++    lp::LinearProgram lp(lp::LPObjectiveSense::MINIMIZE, move(variables_temp), move(constraints_temp), infinity);
++    LPVariables& variables = lp.get_variables();
++    LPConstraints& constraints = lp.get_constraints();
++
++    lp::LPConstraint dummy_constraint(0, infinity);
++    dummy_constraint.insert(0, 1); // Hack to make setInteger work.
++    constraints.push_back(dummy_constraint);
++
++    // Create operator variables
++    if (mip)
++        cout << "Using integer operator-counting variables" << endl;
++    for (OperatorProxy op : task_proxy.get_operators()) {
++        variables.push_back(lp::LPVariable(0, infinity, op.get_cost(), mip));
++    }
++
++    // Compute LP problem without observation constraints
++    if (calculate_h) {
++        // Initialize LP
++        for (const auto &generator : constraint_generators)
++            generator->initialize_constraints(task, lp);
++        cout << "h #constraints: " << constraints.size() << endl;
++        lp_h.load_problem(lp);
++        cout << "Loaded basic problem." << endl;
++        // Update constraints
++        for (const auto &generator : constraint_generators) {
++            if (generator->update_constraints(state, lp_h)) {
++                calculate_h = false;
++                break;
++            }
++        }
++        cout << "Updated constraints. Solvable: " << calculate_h << endl;
++        // Compute result
++        if (calculate_h) {
++            lp_h.solve();
++            if (lp_h.has_optimal_solution()) {
++                double epsilon = 0.01;
++                double objective_value = lp_h.get_objective_value();
++                result = ceil(objective_value - epsilon);
++            }
++        }
++        cout << "h: " << result << endl;
++    }
++
++    if (h_obs != OBS_NONE) {
++        // Use special computation for observation
++        constraints.clear();
++        constraints.push_back(dummy_constraint);
++        variables.erase(variables.begin() + task_proxy.get_operators().size(), variables.end());
++        add_observation_variables(variables, constraints);
++        assert(obs_var_offset == task_proxy.get_operators().size());
++        // Re-initialize constraints using observations
++        vector<int> observation_ids;
++        for (const string &obs : observations)
++            if (op_indexes.find(obs) != op_indexes.end())
++                observation_ids.push_back(op_indexes[obs]);
++        for (const auto &generator : constraint_generators) {
++            generator->set_observations(observation_ids, h_obs);
++            generator->initialize_constraints(task, lp);
++        }
++    } else {
++        // Use default heuristic constraints
++        add_observation_variables(variables, constraints);
++        // If not initialized already
++        if (!calculate_h) {
++            for (const auto &generator : constraint_generators)
++                generator->initialize_constraints(task, lp);
++        }
++    }
++
++    // Compute LP problem with soft observation constraints
++    if (calculate_h_s) {
++        // Initialize LP
++        set_variable_weights(variables);
++        cout << "h_s #constraints: " << constraints.size() << endl;
++        lp_h_s.load_problem(lp);
++        cout << "Loaded problem with soft constraints." << endl;
++        // Update constraints
++        for (const auto &generator : constraint_generators) {
++            if (generator->update_constraints(state, lp_h_s))
++                calculate_h_s = false;
++        }
++        cout << "Updated soft constraints. Solvable: " << calculate_h_s << endl;
++        // Compute result
++        if (calculate_h_s) {
++            lp_h_s.solve();
++            if (lp_h_s.has_optimal_solution()) {
++                double epsilon = 0.01;
++                double objective_value = lp_h_s.get_objective_value();
++                result_s = ceil(objective_value - epsilon) + max_weight;
++            }
++        }
++        cout << "h_s: " << result_s << endl;
++    }
++    
++    // Compute LP problem with hard observation constraints
++    if (calculate_h_c) {
++        add_observation_hard_constraint(variables, constraints);
++        cout << "h_c #constraints: " << constraints.size() << endl;
++        lp_h_c.load_problem(lp);
++        cout << "Loaded problem with hard constraints." << endl;
++        // Update constraints
++        for (const auto &generator : constraint_generators) {
++            if (generator->update_constraints(state, lp_h_c))
++                calculate_h_c = false;
++        }
++        cout << "Updated hard constraints. Solvable: " << calculate_h_c << endl;
++        // Compute LP
++        if (calculate_h_c) {
++            lp_h_c.solve();
++            if (lp_h_c.has_optimal_solution()) {
++                double epsilon = 0.01;
++                double objective_value = lp_h_c.get_objective_value();
++                result_c = ceil(objective_value - epsilon);
++            }
++        }
++        cout << "h_c: " << result_c << endl;
++    }
++
++    lp_timer.stop();
++    output_results(result, result_c, result_s);
++
++    exit(EXIT_SUCCESS);
++    return 0;
++}
++
++void OCSingleShotHeuristic::output_results(double result, double result_c, double result_s) {
++    // Log solutions
++    cout << "Writing solutions..." << endl;
++    cout << endl << string(80, '*') << endl;
++    vector<double> solution;
++    int num_vars, num_const;
++    if (calculate_h_s) {
++        solution = lp_h_s.extract_solution();
++        num_vars = lp_h_s.get_num_variables();
++        num_const = lp_h_s.get_num_constraints();
++    } else if (calculate_h_c) {
++        solution = lp_h_c.extract_solution();
++        num_vars = lp_h_c.get_num_variables();
++        num_const = lp_h_c.get_num_constraints();
++    } else {
++        solution = lp_h.extract_solution();
++        num_vars = lp_h.get_num_variables();
++        num_const = lp_h.get_num_constraints();
++    }
++    for (int i = 0; i < (int) solution.size(); ++i) {
++        cout << "X[" << i << "] = " << solution[i] << endl;
++    }
++    vector<double> lp_info;
++    for (const auto &generator : constraint_generators)
++        generator->log_info(task_proxy, solution, lp_info);
++    // Get hits/misses
++    double obs_hits = 0, obs_miss = 0;
++    unordered_map<string, double> counts;
++    for(auto it = observations.begin() ; it != observations.end(); ++it) {
++        if (op_indexes.find(*it) != op_indexes.end()) {
++            if (solution[op_indexes[*it]] > counts[*it]) {
++                obs_hits++;
++                counts[*it]++;
++            } else {
++                obs_miss++;
++            }
++        }
++    }
++    cout << "obs-report: " << observations.size() << " " << num_pruned_observations << " " << obs_hits << " " << obs_miss << endl;
++    cout << "time-report: " << lp_timer << endl;
++    cout << "h-values: " << result << " " << result_c << " " << result_s << endl;
++    cout << "lp-info: " <<  num_vars << " " << num_const;
++    for (double i : lp_info)
++        cout << " " << i; 
++    cout << endl;
++    cout << string(80, '*') << endl << endl;
++    // Write result
++    cout << "Writing results...";
++    ofstream results;
++    results.open("ocsingleshot_heuristic_result.dat");
++    results << "obs-report: " << observations.size() << " " << num_pruned_observations << " " << obs_hits << " " << obs_miss << endl;
++    results << "time-report: " << lp_timer << endl;
++    results << "h-values: " << result << " " << result_c << " " << result_s << endl;
++    results << "lp-info: " <<  num_vars << " " << num_const;
++    for (double i : lp_info)
++        results << " " << i; 
++    results << endl;
++    // Write counts
++    int var_i = 0;
++    for (OperatorProxy op : task_proxy.get_operators()) {
++        if (solution[var_i] > 0) {
++            results << "(" << op.get_name() << ") = " << solution[var_i] << endl;
++        }
++        var_i++;
++    }
++    results.flush();
++    results.close();
++    cout << "Done!" << endl;
++}
++
++OCSingleShotHeuristic::~OCSingleShotHeuristic() {
++}
++
++class OCSingleShotHeuristicFeature : public plugins::TypedFeature<Evaluator, OCSingleShotHeuristic> {
++public:
++    OCSingleShotHeuristicFeature() : TypedFeature("ocsingleshot") {
++        document_title("Operator-counting Single-Shot heuristic");
++
++        add_list_option<shared_ptr<ConstraintGenerator>>(
++            "constraint_generators",
++            "methods that generate constraints over operator counting variables");
++        add_option<bool>("calculate_h", "calculate h-value", "false");
++        add_option<bool>("calculate_h_c", "calculate h-value with hard observation constraints", "true");
++        add_option<bool>("calculate_h_s", "calculate h-value with soft observation constraints", "false");
++        add_option<int>("weights",
++            "weight type for soft constraints",
++            "0");
++        add_option<int>("filter",
++            "observation filter F; it allows to ignore F*0.1 of the observations",
++            "0");
++        add_option<int>("h_obs", 
++            "enable observations inside heuristic constraints; 0 to do not consider observations, 1 to consider as a set, 2+ to consider as a list",
++            "0");
++        add_option<bool>("mip",
++            "use MIP solver",
++            "false");
++        lp::add_lp_solver_option_to_feature(*this);
++        Heuristic::add_options_to_feature(*this);
++    }
++
++    virtual shared_ptr<OCSingleShotHeuristic> create_component(const plugins::Options &options, const utils::Context &context) const override {
++        plugins::verify_list_non_empty<shared_ptr<ConstraintGenerator>>(
++            context, options, "constraint_generators");
++        return make_shared<OCSingleShotHeuristic>(options);
++    }
++};
++
++static plugins::FeaturePlugin<OCSingleShotHeuristicFeature> _plugin;
++}
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/operator_counting/oc_single_shot_heuristic.h fast-downward/src/search/operator_counting/oc_single_shot_heuristic.h
+--- fast-downward-original/src/search/operator_counting/oc_single_shot_heuristic.h	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/operator_counting/oc_single_shot_heuristic.h	2024-02-24 20:05:13.725567700 -0300
+@@ -0,0 +1,67 @@
++#ifndef OPERATOR_COUNTING_OPERATOR_COUNTING_HEURISTIC_H
++#define OPERATOR_COUNTING_OPERATOR_COUNTING_HEURISTIC_H
++
++#include "../heuristic.h"
++
++#include "../lp/lp_solver.h"
++
++#include <memory>
++#include <vector>
++#include <string>
++#include <unordered_map>
++
++namespace plugins {
++class Options;
++}
++
++namespace lp {
++class LPConstraint;
++struct LPVariable;
++class LinearProgram;
++}
++
++namespace operator_counting {
++using LPConstraints = named_vector::NamedVector<lp::LPConstraint>;
++using LPVariables = named_vector::NamedVector<lp::LPVariable>;
++class ConstraintGenerator;
++
++class OCSingleShotHeuristic : public Heuristic {
++    std::vector<std::shared_ptr<ConstraintGenerator>> constraint_generators;
++    lp::LPSolver lp_h;
++    lp::LPSolver lp_h_c;
++    lp::LPSolver lp_h_s;
++    bool calculate_h, calculate_h_c, calculate_h_s;
++    int filter;
++    int h_obs;
++    bool mip;
++
++    std::unordered_map<std::string,int> op_indexes;
++    std::vector<std::string> observations;
++    std::vector<std::string> pruned_observations;
++    std::unordered_map<std::string, int> obs_occurrences;
++    std::unordered_map<std::string, int> valid_obs_occurrences;
++    int num_pruned_observations = 0;
++    int num_valid_observations = 0;
++
++    int soft_weight;
++    std::unordered_map<std::string, double> weights;
++    double max_weight = 0;
++    int obs_var_offset = 0;
++
++protected:
++    virtual int compute_heuristic(const State &ancestor_state) override;
++    void load_observations();
++    void prune_observations();
++    void add_observation_variables(LPVariables &variables, LPConstraints &constraints);
++    void add_observation_hard_constraint(LPVariables &variables, LPConstraints &constraints);
++    void set_variable_weights(LPVariables &variables);
++    void output_results(double result, double result_c, double result_s);
++public:
++    explicit OCSingleShotHeuristic(const plugins::Options &opts);
++    ~OCSingleShotHeuristic();
++    void map_operators(bool show = false);
++    void show_variables_and_objective(const LPVariables &variables);
++};
++}
++
++#endif
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/pdbs/explicit_projection.cc fast-downward/src/search/pdbs/explicit_projection.cc
+--- fast-downward-original/src/search/pdbs/explicit_projection.cc	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/pdbs/explicit_projection.cc	2024-02-24 20:05:13.728678100 -0300
+@@ -0,0 +1,513 @@
++#include "explicit_projection.h"
++
++#include "../utils/collections.h"
++#include "../utils/logging.h"
++#include "../utils/math.h"
++
++#include <limits>
++#include <unordered_map>
++
++using namespace std;
++
++namespace pdbs {
++int rank_state(const Pattern &pattern, const vector<int> &hash_multipliers,
++               const State &state) {
++    size_t index = 0;
++    for (size_t i = 0; i < pattern.size(); ++i) {
++        index += hash_multipliers[i] * state[pattern[i]].get_value();
++    }
++    return index;
++}
++
++int rank_abstract_state(const vector<int> &hash_multipliers,
++                        const vector<int> &state) {
++    size_t index = 0;
++    for (size_t i = 0; i < state.size(); ++i) {
++        index += hash_multipliers[i] * state[i];
++    }
++    return index;
++}
++
++vector<int> unrank_abstract_state(const Pattern &pattern,
++                                  const vector<int> &hash_multipliers,
++                                  int index) {
++    vector<int> values(pattern.size());
++    for (int i = pattern.size() - 1; i >= 0; --i) {
++        values[i] = index / hash_multipliers[i];
++        index -= values[i] * hash_multipliers[i];
++    }
++    assert(index == 0);
++    return values;
++}
++
++bool is_goal_state(const vector<int> &unranked, const vector<FactPair> &goals) {
++    for (FactPair goal : goals) {
++        if (unranked[goal.var] != goal.value) {
++            return false;
++        }
++    }
++    return true;
++}
++
++bool violates_mutex(const vector<int> &abstract_state,
++                    const pdbs::Pattern &pattern, const TaskProxy &task_proxy) {
++    VariablesProxy vars = task_proxy.get_variables();
++    int num_pattern_vars = pattern.size();
++    assert(num_pattern_vars == static_cast<int>(abstract_state.size()));
++    for (int i1 = 0; i1 < num_pattern_vars; ++i1) {
++        FactProxy f1 = vars[pattern[i1]].get_fact(abstract_state[i1]);
++        for (int i2 = i1 + 1; i2 < num_pattern_vars; ++i2) {
++            FactProxy f2 = vars[pattern[i2]].get_fact(abstract_state[i2]);
++            if (f1.is_mutex(f2)) {
++                return true;
++            }
++        }
++    }
++    return false;
++}
++
++int compute_hash_multipliers(const Pattern &pattern,
++                             const TaskProxy &task_proxy,
++                             vector<int> &hash_multipliers) {
++    assert(hash_multipliers.empty());
++    hash_multipliers.reserve(pattern.size());
++    int num_states = 1;
++    for (int pattern_var_id : pattern) {
++        hash_multipliers.push_back(num_states);
++        VariableProxy var = task_proxy.get_variables()[pattern_var_id];
++        if (utils::is_product_within_limit(num_states, var.get_domain_size(),
++                                           numeric_limits<int>::max())) {
++            num_states *= var.get_domain_size();
++        } else {
++            cerr << "Given pattern is too large! (Overflow occured): " << endl;
++            cerr << pattern << endl;
++            utils::exit_with(utils::ExitCode::SEARCH_CRITICAL_ERROR);
++        }
++    }
++
++    return num_states;
++}
++
++class ForwardAbstractOperator {
++   public:
++    vector<FactPair> preconditions;
++    int hash_effect;
++    int id;
++
++    ForwardAbstractOperator(int op_id, const vector<FactPair> &prev_pairs,
++                            const vector<FactPair> &pre_pairs,
++                            const vector<FactPair> &eff_pairs,
++                            const vector<int> &hash_multipliers);
++    bool is_appliable(const vector<int> &unranked) const;
++};
++
++ForwardAbstractOperator::ForwardAbstractOperator(
++    int op_id, const vector<FactPair> &prev_pairs,
++    const vector<FactPair> &pre_pairs, const vector<FactPair> &eff_pairs,
++    const vector<int> &hash_multipliers) {
++    id = op_id;
++
++    preconditions.insert(preconditions.end(), prev_pairs.begin(),
++                         prev_pairs.end());
++    preconditions.insert(preconditions.end(), pre_pairs.begin(),
++                         pre_pairs.end());
++
++    hash_effect = 0;
++    assert(pre_pairs.size() == eff_pairs.size());
++    for (size_t i = 0; i < pre_pairs.size(); ++i) {
++        int var = pre_pairs[i].var;
++        assert(var == eff_pairs[i].var);
++        int pre = pre_pairs[i].value;
++        int post = eff_pairs[i].value;
++        assert(pre != -1);
++        size_t effect = (post - pre) * hash_multipliers[var];
++        hash_effect += effect;
++    }
++}
++
++bool ForwardAbstractOperator::is_appliable(const vector<int> &unranked) const {
++    for (FactPair fact : preconditions) {
++        if (unranked[fact.var] != fact.value) {
++            return false;
++        }
++    }
++    return true;
++}
++
++void multiply_out(int op_id, int pos, vector<FactPair> &prev_pairs,
++                  vector<FactPair> &pre_pairs, vector<FactPair> &eff_pairs,
++                  const vector<FactPair> &effects_without_pre,
++                  const VariablesProxy &variables, const Pattern &pattern,
++                  const vector<int> &hash_multipliers,
++                  vector<ForwardAbstractOperator> &operators) {
++    if (pos == static_cast<int>(effects_without_pre.size())) {
++        // All effects without precondition have been checked: insert op.
++        operators.emplace_back(op_id, prev_pairs, pre_pairs, eff_pairs,
++                               hash_multipliers);
++    } else {
++        // For each possible value for the current variable, build an
++        // abstract operator.
++        int var_id = effects_without_pre[pos].var;
++        int eff = effects_without_pre[pos].value;
++        VariableProxy var = variables[pattern[var_id]];
++        for (int i = 0; i < var.get_domain_size(); ++i) {
++            if (i != eff) {
++                pre_pairs.emplace_back(var_id, i);
++                eff_pairs.emplace_back(var_id, eff);
++            } else {
++                prev_pairs.emplace_back(var_id, i);
++            }
++            multiply_out(op_id, pos + 1, prev_pairs, pre_pairs, eff_pairs,
++                         effects_without_pre, variables, pattern,
++                         hash_multipliers, operators);
++            if (i != eff) {
++                pre_pairs.pop_back();
++                eff_pairs.pop_back();
++            } else {
++                prev_pairs.pop_back();
++            }
++        }
++    }
++}
++
++bool build_abstract_operators(const OperatorProxy &op,
++                              const vector<int> &variable_to_index,
++                              const VariablesProxy &variables,
++                              const Pattern &pattern,
++                              const vector<int> &hash_multipliers,
++                              vector<ForwardAbstractOperator> &operators) {
++    // All variable value pairs that are a prevail condition
++    vector<FactPair> prev_pairs;
++    // All variable value pairs that are a precondition (value != -1)
++    vector<FactPair> pre_pairs;
++    // All variable value pairs that are an effect
++    vector<FactPair> eff_pairs;
++    // All variable value pairs that are a precondition (value = -1)
++    vector<FactPair> effects_without_pre;
++
++    size_t num_vars = variables.size();
++    vector<bool> has_precond_and_effect_on_var(num_vars, false);
++    vector<int> precondition_on_var(num_vars, -1);
++
++    for (FactProxy pre : op.get_preconditions())
++        precondition_on_var[pre.get_variable().get_id()] = pre.get_value();
++
++    for (EffectProxy eff : op.get_effects()) {
++        int var_id = eff.get_fact().get_variable().get_id();
++        int pattern_var_id = variable_to_index[var_id];
++        int val = eff.get_fact().get_value();
++        if (pattern_var_id != -1) {
++            if (precondition_on_var[var_id] != -1) {
++                if (precondition_on_var[var_id] != val) {
++                    has_precond_and_effect_on_var[var_id] = true;
++                    eff_pairs.emplace_back(pattern_var_id, val);
++                }
++            } else {
++                effects_without_pre.emplace_back(pattern_var_id, val);
++            }
++        }
++    }
++    for (FactProxy pre : op.get_preconditions()) {
++        int var_id = pre.get_variable().get_id();
++        int pattern_var_id = variable_to_index[var_id];
++        int val = pre.get_value();
++        if (pattern_var_id != -1) {  // variable occurs in pattern
++            if (has_precond_and_effect_on_var[var_id]) {
++                pre_pairs.emplace_back(pattern_var_id, val);
++            } else {
++                prev_pairs.emplace_back(pattern_var_id, val);
++            }
++        }
++    }
++    if (eff_pairs.empty() && effects_without_pre.empty() &&
++        prev_pairs.empty()) {
++        return false;
++    } else {
++        multiply_out(op.get_id(), 0, prev_pairs, pre_pairs, eff_pairs,
++                     effects_without_pre, variables, pattern, hash_multipliers,
++                     operators);
++        return true;
++    }
++}
++
++pair<AbstractionFunction, AbstractTransitionSystem> prune_transition_system(
++    const AbstractionFunction &alpha,
++    const AbstractTransitionSystem &transition_system, const vector<bool> &keep,
++    const vector<bool> &merge_to_dummy_state) {
++    vector<int> index_translation(transition_system.num_states, -1);
++    int num_remaining_states = 0;
++    if (!merge_to_dummy_state.empty()) {
++        // Use state 0 as a dummy state.
++        num_remaining_states = 1;
++    }
++    for (int old_state = 0; old_state < transition_system.num_states;
++         ++old_state) {
++        if (keep[old_state]) {
++            if (!merge_to_dummy_state.empty() &&
++                merge_to_dummy_state[old_state]) {
++                index_translation[old_state] = 0;
++            } else {
++                index_translation[old_state] = num_remaining_states;
++                ++num_remaining_states;
++            }
++        }
++    }
++
++    if (num_remaining_states == transition_system.num_states) {
++        return make_pair(alpha, transition_system);
++    }
++
++    AbstractTransitionSystem pruned_ts;
++    pruned_ts.num_states = num_remaining_states;
++
++    assert(keep[transition_system.initial_state]);
++    pruned_ts.initial_state =
++        index_translation[transition_system.initial_state];
++
++    for (int goal : transition_system.goal_states) {
++        if (keep[goal]) {
++            pruned_ts.goal_states.push_back(index_translation[goal]);
++        }
++    }
++    utils::sort_unique(pruned_ts.goal_states);
++
++    pruned_ts.self_loops_on_all_states =
++        transition_system.self_loops_on_all_states;
++
++    unordered_map<int, vector<int>> self_loops_by_op;
++    for (Transition t : transition_system.self_loops) {
++        int source = t.source;
++        if (keep[source]) {
++            self_loops_by_op[t.op_id].push_back(index_translation[source]);
++        }
++    }
++
++    for (Transition t : transition_system.state_changing_transitions) {
++        int source = t.source;
++        int target = t.target;
++        if (keep[source] && keep[target]) {
++            int new_source = index_translation[source];
++            int new_target = index_translation[target];
++            if (new_source == new_target) {
++                self_loops_by_op[t.op_id].push_back(new_source);
++            } else {
++                pruned_ts.state_changing_transitions.emplace_back(
++                    new_source, new_target, t.op_id);
++            }
++        }
++    }
++
++    for (auto &entry : self_loops_by_op) {
++        int op_id = entry.first;
++        vector<int> &sources = entry.second;
++        utils::sort_unique(sources);
++        if (static_cast<int>(sources.size()) == pruned_ts.num_states) {
++            pruned_ts.self_loops_on_all_states.push_back(op_id);
++        } else {
++            for (int source : sources) {
++                pruned_ts.self_loops.emplace_back(source, source, op_id);
++            }
++        }
++    }
++
++    AbstractionFunction alpha_pruned(alpha, move(index_translation));
++    return make_pair(alpha_pruned, pruned_ts);
++}
++
++AbstractionFunction::AbstractionFunction(const Pattern &pattern,
++                                         const vector<int> &hash_multipliers)
++    : pattern(pattern), hash_multipliers(hash_multipliers) {}
++
++AbstractionFunction::AbstractionFunction(const AbstractionFunction &other,
++                                         vector<int> &&index_translation)
++    : pattern(other.pattern),
++      hash_multipliers(other.hash_multipliers),
++      index_translation(move(index_translation)) {}
++
++int AbstractionFunction::get_abstract_state(const State &state) const {
++    int state_id = rank_state(pattern, hash_multipliers, state);
++    if (index_translation.empty()) {
++        return state_id;
++    } else {
++        assert(utils::in_bounds(state_id, index_translation));
++        return index_translation[state_id];
++    }
++}
++
++pair<AbstractionFunction, AbstractTransitionSystem> project_task(
++    const AbstractTask &task, const Pattern &pattern, bool remove_dead_states,
++    bool use_mutexes, const vector<vector<int>> &partial_merge_states) {
++    utils::unused_variable(remove_dead_states);
++    utils::unused_variable(use_mutexes);
++
++    TaskProxy task_proxy(task);
++    AbstractTransitionSystem transition_system;
++
++    vector<int> hash_multipliers;
++    transition_system.num_states =
++        compute_hash_multipliers(pattern, task_proxy, hash_multipliers);
++
++    VariablesProxy variables = task_proxy.get_variables();
++    vector<int> variable_to_index(variables.size(), -1);
++    for (size_t i = 0; i < pattern.size(); ++i) {
++        variable_to_index[pattern[i]] = i;
++    }
++
++    State task_initial_state = task_proxy.get_initial_state();
++    transition_system.initial_state =
++        rank_state(pattern, hash_multipliers, task_initial_state);
++
++    vector<FactPair> abstract_goal;
++    for (FactProxy goal : task_proxy.get_goals()) {
++        int var_pattern_index = variable_to_index[goal.get_variable().get_id()];
++        if (var_pattern_index != -1) {
++            abstract_goal.emplace_back(var_pattern_index, goal.get_value());
++        }
++    }
++
++    vector<ForwardAbstractOperator> abstract_operators;
++    for (OperatorProxy op : task_proxy.get_operators()) {
++        int op_relevant =
++            build_abstract_operators(op, variable_to_index, variables, pattern,
++                                     hash_multipliers, abstract_operators);
++        if (!op_relevant) {
++            transition_system.self_loops_on_all_states.push_back(op.get_id());
++        }
++    }
++
++    vector<bool> seen(transition_system.num_states, false);
++    vector<int> queue;
++    vector<vector<int>> inverse_transitions(transition_system.num_states);
++    queue.reserve(transition_system.num_states);
++    if (remove_dead_states) {
++        // Only generate states/transitions that are forward reachable.
++        queue.push_back(transition_system.initial_state);
++    } else {
++        // Generate all states/transitions.
++        for (int state = 0; state < transition_system.num_states; ++state) {
++            queue.push_back(state);
++        }
++    }
++    while (!queue.empty()) {
++        int source = queue.back();
++        queue.pop_back();
++
++        if (seen[source]) {
++            continue;
++        }
++        seen[source] = true;
++
++        vector<int> unranked =
++            unrank_abstract_state(pattern, hash_multipliers, source);
++        if (is_goal_state(unranked, abstract_goal)) {
++            transition_system.goal_states.push_back(source);
++        }
++
++        for (const ForwardAbstractOperator &op : abstract_operators) {
++            if (op.is_appliable(unranked)) {
++                if (op.hash_effect == 0) {
++                    transition_system.self_loops.emplace_back(source, source,
++                                                              op.id);
++                } else {
++                    int target = source + op.hash_effect;
++                    transition_system.state_changing_transitions.emplace_back(
++                        source, target, op.id);
++                    queue.push_back(target);
++                    inverse_transitions[target].push_back(source);
++                }
++            }
++        }
++    }
++
++    vector<bool> keep(seen);
++    if (use_mutexes) {
++        for (int state = 0; state < transition_system.num_states; ++state) {
++            if (keep[state]) {
++                vector<int> unranked =
++                    unrank_abstract_state(pattern, hash_multipliers, state);
++                keep[state] = !violates_mutex(unranked, pattern, task_proxy);
++            }
++        }
++    }
++
++    if (remove_dead_states) {
++        vector<bool> backwards_seen(transition_system.num_states, false);
++        vector<int> backwards_queue;
++        for (int goal : transition_system.goal_states) {
++            if (keep[goal]) {
++                backwards_queue.push_back(goal);
++            }
++        }
++        while (!backwards_queue.empty()) {
++            int target = backwards_queue.back();
++            backwards_queue.pop_back();
++
++            if (backwards_seen[target] || !keep[target]) {
++                continue;
++            }
++            backwards_seen[target] = true;
++
++            for (int source : inverse_transitions[target]) {
++                backwards_queue.push_back(source);
++            }
++        }
++        for (int state = 0; state < transition_system.num_states; ++state) {
++            keep[state] = keep[state] && backwards_seen[state];
++        }
++    }
++    keep[transition_system.initial_state] = true;
++
++    vector<bool> merge_to_dummy_state;
++    if (!partial_merge_states.empty()) {
++        merge_to_dummy_state.resize(transition_system.num_states, true);
++        for (const vector<int> &abstract_state : partial_merge_states) {
++            merge_to_dummy_state[rank_abstract_state(hash_multipliers,
++                                                     abstract_state)] = false;
++        }
++    }
++
++    AbstractionFunction alpha(pattern, hash_multipliers);
++    return prune_transition_system(alpha, transition_system, keep,
++                                   merge_to_dummy_state);
++}
++
++void dump(const AbstractTransitionSystem &ts) {
++    cout << "num_states: " << ts.num_states << endl;
++
++    cout << "init: " << ts.initial_state << endl;
++
++    cout << "goals: ";
++    for (int g : ts.goal_states) {
++        cout << g << ", ";
++    }
++    cout << endl;
++
++    cout << "irrelevant: ";
++    for (int i : ts.self_loops_on_all_states) {
++        cout << i << ", ";
++    }
++    cout << endl;
++
++    vector<vector<vector<int>>> transitions(ts.num_states,
++                                            vector<vector<int>>(ts.num_states));
++
++    for (Transition t : ts.state_changing_transitions) {
++        transitions[t.source][t.target].push_back(t.op_id);
++    }
++    for (Transition t : ts.self_loops) {
++        transitions[t.source][t.source].push_back(t.op_id);
++    }
++
++    cout << "Transitions:" << endl;
++    for (int source = 0; source < ts.num_states; ++source) {
++        for (int target = 0; target < ts.num_states; ++target) {
++            if (transitions[source][target].empty()) continue;
++            cout << source << " -> " << target << " [label=\"";
++            for (int op_id : transitions[source][target]) {
++                cout << op_id << ", ";
++            }
++            cout << "\"]" << endl;
++        }
++    }
++}
++}  // namespace pdbs
+diff -X lp-recognizer/fd-patch.ignore -ruN fast-downward-original/src/search/pdbs/explicit_projection.h fast-downward/src/search/pdbs/explicit_projection.h
+--- fast-downward-original/src/search/pdbs/explicit_projection.h	1969-12-31 21:00:00.000000000 -0300
++++ fast-downward/src/search/pdbs/explicit_projection.h	2024-02-24 20:05:13.730670200 -0300
+@@ -0,0 +1,52 @@
++#ifndef PDBS_EXPLICIT_PROJECTION_H
++#define PDBS_EXPLICIT_PROJECTION_H
++
++#include "types.h"
++
++#include "../abstract_task.h"
++#include "../task_proxy.h"
++
++#include <vector>
++
++namespace pdbs {
++struct Transition {
++    int source;
++    int target;
++    int op_id;
++
++    Transition(int source, int target, int op_id)
++        : source(source), target(target), op_id(op_id) {}
++};
++
++struct AbstractTransitionSystem {
++    int num_states;
++    int initial_state;
++    std::vector<int> goal_states;
++    std::vector<Transition> state_changing_transitions;
++    std::vector<Transition> self_loops;
++    std::vector<int> self_loops_on_all_states;
++};
++
++class AbstractionFunction {
++    std::vector<int> pattern;
++    std::vector<int> hash_multipliers;
++    std::vector<int> index_translation;
++
++   public:
++    AbstractionFunction(const Pattern &pattern,
++                        const std::vector<int> &hash_multipliers);
++    AbstractionFunction(const AbstractionFunction &other,
++                        std::vector<int> &&index_translation);
++    int get_abstract_state(const State &state) const;
++};
++
++std::pair<AbstractionFunction, AbstractTransitionSystem> project_task(
++    const AbstractTask &task, const Pattern &pattern,
++    bool remove_dead_states = true, bool use_mutexes = false,
++    const std::vector<std::vector<int>> &partial_merge_states =
++        std::vector<std::vector<int>>());
++
++void dump(const AbstractTransitionSystem &ts);
++}  // namespace pdbs
++
++#endif

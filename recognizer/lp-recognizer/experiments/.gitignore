@@ -1,0 +1,7 @@
+# Output files
+stdout/*
+
+# Instance files
+small-sokoban-optimal/*/*.dat
+small-sokoban-optimal/*/*.pddl
+small-sokoban-optimal/*/*.tar

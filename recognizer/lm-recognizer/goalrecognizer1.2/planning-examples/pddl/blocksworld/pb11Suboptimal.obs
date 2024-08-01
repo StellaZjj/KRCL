@@ -1,0 +1,36 @@
+pickup a
+stack a b
+unstack a b
+pickup c
+pickup g
+pickup b
+stack c d
+stack g h
+pickup j
+stack b c
+pickup e
+unstack g h
+pickup i
+stack j k
+stack a b
+stack e f
+pickup h
+stack i j
+unstack a b
+unstack e f
+stack h i
+unstack b c
+pickup f
+stack g h
+putdown b
+unstack c d
+stack f g
+stack a b
+pickup d
+stack e f
+unstack a b
+stack d e
+pickup b
+stack c d
+stack b c
+stack a b

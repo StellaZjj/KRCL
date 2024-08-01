@@ -1,0 +1,14 @@
+./depots -e 2 -i 3 -t 3 -p 2 -h 2 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb2.pddl
+./depots -e 2 -i 3 -t 3 -p 5 -h 2 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb3.pddl
+./depots -e 3 -i 3 -t 3 -p 3 -h 2 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb4.pddl
+./depots -e 2 -i 2 -t 5 -p 3 -h 2 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb5.pddl
+./depots -e 3 -i 3 -t 3 -p 1 -h 2 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb6.pddl
+./depots -e 4 -i 2 -t 1 -p 1 -h 1 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb7.pddl
+./depots -e 2 -i 2 -t 1 -p 1 -h 1 -c 5 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb8.pddl
+./depots -e 2 -i 1 -t 2 -p 1 -h 1 -c 6 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb9.pddl
+./depots -e 3 -i 1 -t 1 -p 2 -h 1 -c 4 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb10.pddl
+./depots -e 3 -i 1 -t 2 -p 2 -h 2 -c 3 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb11.pddl
+./depots -e 2 -i 1 -t 2 -p 2 -h 1 -c 7 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb12.pddl
+./depots -e 5 -i 1 -t 2 -p 2 -h 2 -c 2 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb13.pddl
+./depots -e 3 -i 2 -t 3 -p 4 -h 5 -c 3 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb14.pddl
+./depots -e 1 -i 1 -t 2 -p 1 -h 2 -c 8 > /Users/ramonfragapereira/Workspace/Planning-PlanAbandonmentDetection/experiments/depots/pb15.pddl

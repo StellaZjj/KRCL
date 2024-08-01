@@ -1,0 +1,13 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<atrobbyhallway3> at robby hallway3|<reportedbeacon1> reported beacon1"];
+struct1 [label="<atrobbyhallway2> at robby hallway2"];
+struct2 [label="<atrobbyhallway2> at robby hallway2"];
+struct3 [label="<atrobbyroom1> at robby room1"];
+struct4 [label="<atrobbyhallway1> at robby hallway1"];
+struct3:atrobbyroom1 -> struct2:atrobbyhallway2;
+struct0:atrobbyhallway3 -> struct1:atrobbyhallway2;
+struct0:reportedbeacon1 -> struct3:atrobbyroom1;
+struct1:atrobbyhallway2 -> struct4:atrobbyhallway1;
+}

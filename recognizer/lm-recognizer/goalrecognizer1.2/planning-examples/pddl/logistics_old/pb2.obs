@@ -1,0 +1,44 @@
+load o1 tpgh lpgh
+load o2 tpgh lpgh
+load o3 tpgh lpgh
+load o5 tbos lbos
+load o7 tny lny
+drive tbos lbos abos cbos
+unload o5 tbos abos
+fly p2 apgh abos
+load o5 p2 abos
+drive tny lny any cny
+unload o7 tny any
+drive tpgh lpgh apgh cpgh
+unload o2 tpgh apgh
+load o2 p1 apgh
+unload o3 tpgh apgh
+load o3 p1 apgh
+fly p1 apgh ala
+unload o1 tpgh apgh
+unload o3 p1 ala
+fly p1 ala any
+unload o2 p1 any
+load o2 tny any
+drive tny any lny cny
+load o7 p1 any
+unload o2 tny lny
+drive tla lla ala cla
+load o3 tla ala
+drive tla ala lla cla
+unload o3 tla lla
+fly p1 any apgh
+fly p2 abos apgh
+load o1 p2 apgh
+unload o5 p2 apgh
+fly p2 apgh abos
+load o5 tpgh apgh
+unload o1 p2 abos
+load o1 tbos abos
+drive tbos abos lbos cbos
+unload o1 tbos lbos
+unload o7 p1 apgh
+load o7 tpgh apgh
+drive tpgh apgh lpgh cpgh
+unload o5 tpgh lpgh
+unload o7 tpgh lpgh

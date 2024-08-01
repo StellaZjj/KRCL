@@ -1,0 +1,7 @@
+;TOTAL_ACTIONS=5
+;ABANONED_ACTIONS=0
+lift hoist5 crate1 pallet5 distributor1
+load hoist5 crate1 truck0 distributor1
+drive truck0 distributor1 depot1
+unload hoist1 crate1 truck0 depot1
+drop hoist1 crate1 pallet1 depot1

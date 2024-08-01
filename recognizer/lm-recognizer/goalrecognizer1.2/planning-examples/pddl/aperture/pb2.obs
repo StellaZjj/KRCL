@@ -1,0 +1,10 @@
+enter pbody left middle
+exit pbody middle up
+shoot pbody up middle yellow
+enter pbody up middle
+exit pbody middle right
+shoot pbody right middle red
+pick pbody right companion
+teleport pbody right up red yellow
+drop pbody up companion
+teleport pbody up right yellow red

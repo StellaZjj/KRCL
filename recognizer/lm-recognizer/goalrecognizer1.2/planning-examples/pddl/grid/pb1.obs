@@ -1,0 +1,9 @@
+move f0_1f f0_2f
+move f0_2f f0_3f
+pickup f0_3f key1_0
+move f0_3f f0_4f
+move f0_4f f0_5f
+move f0_5f f0_6f
+move f0_6f f0_7f
+move f0_7f f1_7f
+putdown f1_7f key1_0

@@ -1,0 +1,8 @@
+digraph structs {
+    node [shape=Mrecord];
+    struct1 [label="<f0> on a b | <f1> on b c | <f2> holding c"];
+    struct2 [label="<f0> ontable c | <f1> clear c"];
+    struct2 [label="<f0> on d c | <f1> clear d"];
+    struct1:f1 -> struct2:f0;
+    struct1:f1 -> struct2:f1;
+}

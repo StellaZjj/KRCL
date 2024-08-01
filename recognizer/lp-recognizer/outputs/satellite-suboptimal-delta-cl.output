@@ -1,0 +1,1092 @@
+satellite-suboptimal/10/satellite_p01_hyp-1_10_1.tar.bz2:0.438533067703:0.005702502:0.44
+> 0:True:10,11:190,14
+> 1:True:8,9:190,12
+> 2:False:8,10:190,12
+> 3:True:9,10:190,13
+> 4:False:10,12:190,14
+> 5:False:10,12:190,14
+satellite-suboptimal/10/satellite_p01_hyp-1_10_2.tar.bz2:0.439415931702:0.00559356:0.43
+> 0:True:10,10:190,14
+> 1:False:8,9:190,12
+> 2:True:8,8:190,12
+> 3:True:9,9:190,13
+> 4:False:10,11:190,14
+> 5:False:10,11:190,14
+satellite-suboptimal/10/satellite_p01_hyp-1_10_3.tar.bz2:0.435161113739:0.005515765:0.45
+> 0:True:10,10:190,14
+> 1:False:8,10:190,12
+> 2:False:8,10:190,12
+> 3:False:9,11:190,13
+> 4:False:10,11:190,14
+> 5:False:10,12:190,14
+satellite-suboptimal/10/satellite_p01_hyp-2_10_1.tar.bz2:0.435245037079:0.005782389:0.43
+> 0:True:10,10:190,14
+> 1:True:8,8:190,12
+> 2:False:8,9:190,12
+> 3:True:9,9:190,13
+> 4:True:10,10:190,14
+> 5:True:10,10:190,14
+satellite-suboptimal/10/satellite_p01_hyp-2_10_2.tar.bz2:0.435570001602:0.005544561:0.44
+> 0:False:10,11:190,14
+> 1:True:8,8:190,12
+> 2:False:8,9:190,12
+> 3:True:9,9:190,13
+> 4:True:10,10:190,14
+> 5:True:10,10:190,14
+satellite-suboptimal/10/satellite_p01_hyp-2_10_3.tar.bz2:0.438358068466:0.005672328:0.44
+> 0:False:10,12:190,14
+> 1:True:8,9:190,12
+> 2:False:8,10:190,12
+> 3:True:9,10:190,13
+> 4:True:10,11:190,14
+> 5:False:10,12:190,14
+satellite-suboptimal/10/satellite_p01_hyp-3_10_1.tar.bz2:0.437942028046:0.005753039:0.44
+> 0:True:10,11:190,14
+> 1:True:8,9:190,12
+> 2:True:8,9:190,12
+> 3:True:9,10:190,13
+> 4:True:10,11:190,14
+> 5:True:10,11:190,14
+satellite-suboptimal/10/satellite_p01_hyp-3_10_2.tar.bz2:0.43855214119:0.005883778:0.44
+> 0:False:10,11:190,14
+> 1:False:8,9:190,12
+> 2:True:8,8:190,12
+> 3:False:9,10:190,13
+> 4:True:10,10:190,14
+> 5:True:10,10:190,14
+satellite-suboptimal/10/satellite_p01_hyp-3_10_3.tar.bz2:0.439718961716:0.005950607:0.45
+> 0:True:10,11:190,14
+> 1:True:8,9:190,12
+> 2:True:8,9:190,12
+> 3:True:9,10:190,13
+> 4:True:10,11:190,14
+> 5:True:10,11:190,14
+satellite-suboptimal/10/satellite_p01_hyp-4_10_1.tar.bz2:0.439780950546:0.005706042:0.44
+> 0:True:10,10:190,14
+> 1:False:8,9:190,12
+> 2:True:8,8:190,12
+> 3:True:9,9:190,13
+> 4:False:10,11:190,14
+> 5:False:10,11:190,14
+satellite-suboptimal/10/satellite_p01_hyp-4_10_2.tar.bz2:0.438127040863:0.005847447:0.44
+> 0:True:10,11:190,14
+> 1:False:8,10:190,12
+> 2:False:8,10:190,12
+> 3:False:9,11:190,13
+> 4:False:10,12:190,14
+> 5:True:10,11:190,14
+satellite-suboptimal/10/satellite_p01_hyp-4_10_3.tar.bz2:0.437752962112:0.005808176:0.43
+> 0:True:10,11:190,14
+> 1:False:8,10:190,12
+> 2:True:8,9:190,12
+> 3:True:9,10:190,13
+> 4:False:10,12:190,14
+> 5:False:10,12:190,14
+satellite-suboptimal/10/satellite_p02_hyp-1_10_1.tar.bz2:0.406292915344:0.005191266:0.42
+> 0:True:12,13:104,16
+> 1:True:12,13:104,16
+> 2:False:12,14:104,16
+> 3:True:12,13:104,16
+> 4:True:12,13:104,16
+> 5:True:12,13:104,16
+satellite-suboptimal/10/satellite_p02_hyp-1_10_2.tar.bz2:0.407670974731:0.00507584:0.4
+> 0:True:12,12:104,16
+> 1:True:12,12:104,16
+> 2:True:12,12:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p02_hyp-1_10_3.tar.bz2:0.407652854919:0.005176998:0.41
+> 0:True:12,12:104,16
+> 1:True:12,12:104,16
+> 2:True:12,12:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p02_hyp-2_10_1.tar.bz2:0.407232999802:0.004933102:0.4
+> 0:True:12,12:104,16
+> 1:True:12,12:104,16
+> 2:True:12,12:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p02_hyp-2_10_2.tar.bz2:0.402483940125:0.004856589:0.4
+> 0:True:12,12:104,16
+> 1:True:12,12:104,16
+> 2:True:12,12:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p02_hyp-2_10_3.tar.bz2:0.405102968216:0.004849654:0.41
+> 0:False:12,13:104,16
+> 1:True:12,12:104,16
+> 2:False:12,13:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:False:12,13:104,16
+satellite-suboptimal/10/satellite_p02_hyp-3_10_1.tar.bz2:0.405830860138:0.004916411:0.41
+> 0:False:12,13:104,16
+> 1:False:12,13:104,16
+> 2:True:12,12:104,16
+> 3:False:12,13:104,16
+> 4:False:12,13:104,16
+> 5:False:12,13:104,16
+satellite-suboptimal/10/satellite_p02_hyp-3_10_2.tar.bz2:0.403283119202:0.004861807:0.4
+> 0:False:12,14:104,16
+> 1:True:12,13:104,16
+> 2:True:12,13:104,16
+> 3:False:12,14:104,16
+> 4:False:12,14:104,16
+> 5:True:12,13:104,16
+satellite-suboptimal/10/satellite_p02_hyp-3_10_3.tar.bz2:0.405390977859:0.004999415:0.41
+> 0:True:12,12:104,16
+> 1:False:12,13:104,16
+> 2:True:12,12:104,16
+> 3:False:12,13:104,16
+> 4:False:12,13:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p02_hyp-4_10_1.tar.bz2:0.40726518631:0.005111338:0.42
+> 0:False:12,13:104,16
+> 1:False:12,13:104,16
+> 2:False:12,14:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:False:12,14:104,16
+satellite-suboptimal/10/satellite_p02_hyp-4_10_2.tar.bz2:0.406512022018:0.00487237:0.4
+> 0:False:12,13:104,16
+> 1:True:12,12:104,16
+> 2:False:12,13:104,16
+> 3:True:12,12:104,16
+> 4:False:12,13:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p02_hyp-4_10_3.tar.bz2:0.407428026199:0.005121866:0.4
+> 0:True:12,12:104,16
+> 1:True:12,12:104,16
+> 2:True:12,12:104,16
+> 3:True:12,12:104,16
+> 4:True:12,12:104,16
+> 5:True:12,12:104,16
+satellite-suboptimal/10/satellite_p03_hyp-1_10_1.tar.bz2:0.389507055283:0.004300526:0.39
+> 0:True:9,9:54,13
+> 1:True:9,9:54,13
+> 2:False:8,9:54,12
+> 3:True:9,9:54,13
+> 4:True:9,9:54,13
+> 5:True:9,9:54,13
+satellite-suboptimal/10/satellite_p03_hyp-1_10_2.tar.bz2:0.387084007263:0.004130479:0.39
+> 0:True:9,10:54,13
+> 1:True:9,10:54,13
+> 2:True:8,9:54,12
+> 3:True:9,10:54,13
+> 4:True:9,10:54,13
+> 5:True:9,10:54,13
+satellite-suboptimal/10/satellite_p03_hyp-1_10_3.tar.bz2:0.390511989594:0.004323258:0.4
+> 0:True:9,9:54,13
+> 1:True:9,9:54,13
+> 2:False:8,9:54,12
+> 3:True:9,9:54,13
+> 4:True:9,9:54,13
+> 5:True:9,9:54,13
+satellite-suboptimal/10/satellite_p03_hyp-2_10_1.tar.bz2:0.389204025269:0.004172025:0.39
+> 0:True:9,10:54,13
+> 1:True:9,10:54,13
+> 2:True:8,9:54,12
+> 3:True:9,10:54,13
+> 4:True:9,10:54,13
+> 5:True:9,10:54,13
+satellite-suboptimal/10/satellite_p03_hyp-2_10_2.tar.bz2:0.3864839077:0.004069693:0.39
+> 0:True:9,9:54,13
+> 1:True:9,9:54,13
+> 2:True:8,8:54,12
+> 3:False:9,10:54,13
+> 4:True:9,9:54,13
+> 5:True:9,9:54,13
+satellite-suboptimal/10/satellite_p03_hyp-2_10_3.tar.bz2:0.389713048935:0.004165984:0.4
+> 0:True:9,9:54,13
+> 1:True:9,9:54,13
+> 2:False:8,9:54,12
+> 3:True:9,9:54,13
+> 4:True:9,9:54,13
+> 5:True:9,9:54,13
+satellite-suboptimal/10/satellite_p03_hyp-3_10_1.tar.bz2:0.386077165604:0.004065094:0.39
+> 0:True:9,9:54,13
+> 1:False:9,10:54,13
+> 2:True:8,8:54,12
+> 3:False:9,11:54,13
+> 4:True:9,9:54,13
+> 5:False:9,10:54,13
+satellite-suboptimal/10/satellite_p03_hyp-3_10_2.tar.bz2:0.386240005493:0.003890877:0.38
+> 0:True:9,9:54,13
+> 1:False:9,10:54,13
+> 2:True:8,8:54,12
+> 3:False:9,10:54,13
+> 4:True:9,9:54,13
+> 5:False:9,10:54,13
+satellite-suboptimal/10/satellite_p03_hyp-3_10_3.tar.bz2:0.387742996216:0.004272763:0.38
+> 0:True:9,10:54,13
+> 1:True:9,10:54,13
+> 2:True:8,9:54,12
+> 3:False:9,11:54,13
+> 4:True:9,10:54,13
+> 5:True:9,10:54,13
+satellite-suboptimal/10/satellite_p03_hyp-4_10_1.tar.bz2:0.389713048935:0.004292671:0.39
+> 0:False:9,10:54,13
+> 1:True:9,9:54,13
+> 2:False:8,9:54,12
+> 3:True:9,9:54,13
+> 4:False:9,10:54,13
+> 5:True:9,9:54,13
+satellite-suboptimal/10/satellite_p03_hyp-4_10_2.tar.bz2:0.388583183289:0.004235975:0.39
+> 0:False:9,10:54,13
+> 1:False:9,10:54,13
+> 2:True:8,8:54,12
+> 3:True:9,9:54,13
+> 4:True:9,9:54,13
+> 5:False:9,10:54,13
+satellite-suboptimal/10/satellite_p03_hyp-4_10_3.tar.bz2:0.390239953995:0.004142941:0.4
+> 0:True:9,9:54,13
+> 1:True:9,9:54,13
+> 2:False:8,9:54,12
+> 3:True:9,9:54,13
+> 4:False:9,10:54,13
+> 5:True:9,9:54,13
+satellite-suboptimal/30/satellite_p01_hyp-1_30_1.tar.bz2:0.43901181221:0.005787369:0.44
+> 0:True:10,10:192,16
+> 1:False:8,10:192,14
+> 2:False:8,10:192,14
+> 3:False:9,10:192,15
+> 4:False:10,12:192,16
+> 5:False:10,11:192,16
+satellite-suboptimal/30/satellite_p01_hyp-1_30_2.tar.bz2:0.438142061234:0.005805555:0.45
+> 0:True:10,10:192,16
+> 1:False:8,9:192,14
+> 2:False:8,11:192,14
+> 3:False:9,10:192,15
+> 4:False:10,12:192,16
+> 5:False:10,11:192,16
+satellite-suboptimal/30/satellite_p01_hyp-1_30_3.tar.bz2:0.438233852386:0.005775922:0.44
+> 0:True:10,10:192,16
+> 1:False:8,10:192,14
+> 2:False:8,10:192,14
+> 3:False:9,11:192,15
+> 4:False:10,12:192,16
+> 5:False:10,12:192,16
+satellite-suboptimal/30/satellite_p01_hyp-2_30_1.tar.bz2:0.440375089645:0.005804884:0.44
+> 0:False:10,12:192,16
+> 1:True:8,9:192,14
+> 2:False:8,10:192,14
+> 3:True:9,10:192,15
+> 4:True:10,11:192,16
+> 5:False:10,12:192,16
+satellite-suboptimal/30/satellite_p01_hyp-2_30_2.tar.bz2:0.438982963562:0.005612826:0.44
+> 0:False:10,12:192,16
+> 1:True:8,8:192,14
+> 2:False:8,11:192,14
+> 3:True:9,9:192,15
+> 4:False:10,11:192,16
+> 5:False:10,12:192,16
+satellite-suboptimal/30/satellite_p01_hyp-2_30_3.tar.bz2:0.436972141266:0.0056671:0.43
+> 0:True:10,12:192,16
+> 1:True:8,10:192,14
+> 2:False:8,12:192,14
+> 3:True:9,11:192,15
+> 4:False:10,13:192,16
+> 5:False:10,13:192,16
+satellite-suboptimal/30/satellite_p01_hyp-3_30_1.tar.bz2:0.43722486496:0.005635459:0.44
+> 0:True:10,12:192,16
+> 1:True:8,10:192,14
+> 2:True:8,10:192,14
+> 3:True:9,11:192,15
+> 4:True:10,12:192,16
+> 5:True:10,12:192,16
+satellite-suboptimal/30/satellite_p01_hyp-3_30_2.tar.bz2:0.436905145645:0.005697419:0.44
+> 0:False:10,11:192,16
+> 1:False:8,9:192,14
+> 2:False:8,9:192,14
+> 3:True:9,9:192,15
+> 4:False:10,13:192,16
+> 5:False:10,13:192,16
+satellite-suboptimal/30/satellite_p01_hyp-3_30_3.tar.bz2:0.437949895859:0.005724257:0.44
+> 0:False:10,12:192,16
+> 1:True:8,9:192,14
+> 2:True:8,9:192,14
+> 3:True:9,10:192,15
+> 4:False:10,12:192,16
+> 5:False:10,12:192,16
+satellite-suboptimal/30/satellite_p01_hyp-4_30_1.tar.bz2:0.435870885849:0.00568585:0.44
+> 0:True:10,11:192,16
+> 1:False:8,10:192,14
+> 2:True:8,9:192,14
+> 3:True:9,10:192,15
+> 4:False:10,12:192,16
+> 5:False:10,12:192,16
+satellite-suboptimal/30/satellite_p01_hyp-4_30_2.tar.bz2:0.438751935959:0.005783661:0.43
+> 0:True:10,11:192,16
+> 1:True:8,9:192,14
+> 2:False:8,12:192,14
+> 3:True:9,10:192,15
+> 4:False:10,12:192,16
+> 5:True:10,11:192,16
+satellite-suboptimal/30/satellite_p01_hyp-4_30_3.tar.bz2:0.436778068542:0.00584879:0.44
+> 0:True:10,12:192,16
+> 1:True:8,10:192,14
+> 2:False:8,11:192,14
+> 3:True:9,11:192,15
+> 4:True:10,12:192,16
+> 5:True:10,12:192,16
+satellite-suboptimal/30/satellite_p02_hyp-1_30_1.tar.bz2:0.409435033798:0.005090729:0.42
+> 0:True:12,13:107,19
+> 1:False:12,14:107,19
+> 2:False:12,14:107,19
+> 3:True:12,13:107,19
+> 4:True:12,13:107,19
+> 5:False:12,14:107,19
+satellite-suboptimal/30/satellite_p02_hyp-1_30_2.tar.bz2:0.408098936081:0.005201306:0.41
+> 0:True:12,13:107,19
+> 1:False:12,16:107,19
+> 2:False:12,16:107,19
+> 3:False:12,14:107,19
+> 4:False:12,14:107,19
+> 5:False:12,15:107,19
+satellite-suboptimal/30/satellite_p02_hyp-1_30_3.tar.bz2:0.406409025192:0.004956898:0.41
+> 0:True:12,13:107,19
+> 1:False:12,15:107,19
+> 2:False:12,15:107,19
+> 3:False:12,14:107,19
+> 4:True:12,13:107,19
+> 5:False:12,15:107,19
+satellite-suboptimal/30/satellite_p02_hyp-2_30_1.tar.bz2:0.407444953918:0.005184241:0.4
+> 0:False:12,16:107,19
+> 1:True:12,13:107,19
+> 2:False:12,14:107,19
+> 3:False:12,15:107,19
+> 4:False:12,15:107,19
+> 5:False:12,14:107,19
+satellite-suboptimal/30/satellite_p02_hyp-2_30_2.tar.bz2:0.405311107635:0.004993957:0.41
+> 0:False:12,14:107,19
+> 1:True:12,13:107,19
+> 2:False:12,14:107,19
+> 3:True:12,13:107,19
+> 4:True:12,13:107,19
+> 5:False:12,14:107,19
+satellite-suboptimal/30/satellite_p02_hyp-2_30_3.tar.bz2:0.409854888916:0.005228155:0.42
+> 0:False:12,13:107,19
+> 1:True:12,12:107,19
+> 2:False:12,13:107,19
+> 3:False:12,13:107,19
+> 4:False:12,13:107,19
+> 5:True:12,12:107,19
+satellite-suboptimal/30/satellite_p02_hyp-3_30_1.tar.bz2:0.406100988388:0.005126466:0.41
+> 0:False:12,14:107,19
+> 1:False:12,13:107,19
+> 2:True:12,12:107,19
+> 3:False:12,14:107,19
+> 4:False:12,14:107,19
+> 5:False:12,13:107,19
+satellite-suboptimal/30/satellite_p02_hyp-3_30_2.tar.bz2:0.408350944519:0.005212196:0.41
+> 0:False:12,15:107,19
+> 1:False:12,14:107,19
+> 2:True:12,13:107,19
+> 3:False:12,15:107,19
+> 4:False:12,15:107,19
+> 5:False:12,14:107,19
+satellite-suboptimal/30/satellite_p02_hyp-3_30_3.tar.bz2:0.409466981888:0.005210643:0.4
+> 0:False:12,15:107,19
+> 1:False:12,14:107,19
+> 2:True:12,13:107,19
+> 3:False:12,15:107,19
+> 4:False:12,15:107,19
+> 5:False:12,14:107,19
+satellite-suboptimal/30/satellite_p02_hyp-4_30_1.tar.bz2:0.405194997787:0.004996971:0.41
+> 0:True:12,13:107,19
+> 1:False:12,14:107,19
+> 2:False:12,14:107,19
+> 3:True:12,13:107,19
+> 4:True:12,13:107,19
+> 5:False:12,14:107,19
+satellite-suboptimal/30/satellite_p02_hyp-4_30_2.tar.bz2:0.404935836792:0.004990921:0.4
+> 0:True:12,12:107,19
+> 1:False:12,13:107,19
+> 2:False:12,14:107,19
+> 3:True:12,12:107,19
+> 4:True:12,12:107,19
+> 5:False:12,13:107,19
+satellite-suboptimal/30/satellite_p02_hyp-4_30_3.tar.bz2:0.404458045959:0.005179644:0.41
+> 0:False:12,14:107,19
+> 1:True:12,12:107,19
+> 2:False:12,15:107,19
+> 3:True:12,12:107,19
+> 4:False:12,13:107,19
+> 5:False:12,13:107,19
+satellite-suboptimal/30/satellite_p03_hyp-1_30_1.tar.bz2:0.384026050568:0.004189818:0.38
+> 0:True:9,9:56,15
+> 1:False:9,10:56,15
+> 2:True:8,8:56,14
+> 3:False:9,10:56,15
+> 4:True:9,9:56,15
+> 5:False:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-1_30_2.tar.bz2:0.386312007904:0.004334239:0.39
+> 0:True:9,9:56,15
+> 1:True:9,9:56,15
+> 2:False:8,10:56,14
+> 3:False:9,10:56,15
+> 4:False:9,10:56,15
+> 5:True:9,9:56,15
+satellite-suboptimal/30/satellite_p03_hyp-1_30_3.tar.bz2:0.384964942932:0.00418063:0.39
+> 0:True:9,10:56,15
+> 1:True:9,10:56,15
+> 2:False:8,10:56,14
+> 3:True:9,10:56,15
+> 4:False:9,11:56,15
+> 5:True:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-2_30_1.tar.bz2:0.386949062347:0.004218422:0.38
+> 0:False:9,11:56,15
+> 1:True:9,10:56,15
+> 2:False:8,10:56,14
+> 3:True:9,10:56,15
+> 4:False:9,11:56,15
+> 5:True:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-2_30_2.tar.bz2:0.384793043137:0.004230805:0.39
+> 0:False:9,10:56,15
+> 1:True:9,9:56,15
+> 2:False:8,10:56,14
+> 3:True:9,9:56,15
+> 4:False:9,10:56,15
+> 5:True:9,9:56,15
+satellite-suboptimal/30/satellite_p03_hyp-2_30_3.tar.bz2:0.387810945511:0.004221718:0.39
+> 0:True:9,9:56,15
+> 1:True:9,9:56,15
+> 2:False:8,9:56,14
+> 3:True:9,9:56,15
+> 4:False:9,10:56,15
+> 5:True:9,9:56,15
+satellite-suboptimal/30/satellite_p03_hyp-3_30_1.tar.bz2:0.386389017105:0.004248088:0.38
+> 0:True:9,9:56,15
+> 1:False:9,10:56,15
+> 2:True:8,8:56,14
+> 3:False:9,10:56,15
+> 4:True:9,9:56,15
+> 5:False:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-3_30_2.tar.bz2:0.386183977127:0.004214985:0.39
+> 0:True:9,10:56,15
+> 1:True:9,10:56,15
+> 2:True:8,9:56,14
+> 3:False:9,11:56,15
+> 4:True:9,10:56,15
+> 5:True:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-3_30_3.tar.bz2:0.385390996933:0.004303904:0.38
+> 0:True:9,10:56,15
+> 1:False:9,11:56,15
+> 2:True:8,9:56,14
+> 3:False:9,12:56,15
+> 4:True:9,10:56,15
+> 5:False:9,11:56,15
+satellite-suboptimal/30/satellite_p03_hyp-4_30_1.tar.bz2:0.386826038361:0.004323517:0.4
+> 0:True:9,10:56,15
+> 1:True:9,10:56,15
+> 2:False:8,10:56,14
+> 3:True:9,10:56,15
+> 4:False:9,11:56,15
+> 5:True:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-4_30_2.tar.bz2:0.387522935867:0.004214885:0.39
+> 0:True:9,10:56,15
+> 1:True:9,10:56,15
+> 2:False:8,10:56,14
+> 3:True:9,10:56,15
+> 4:True:9,10:56,15
+> 5:True:9,10:56,15
+satellite-suboptimal/30/satellite_p03_hyp-4_30_3.tar.bz2:0.385302066803:0.004241346:0.38
+> 0:False:9,13:56,15
+> 1:False:9,11:56,15
+> 2:False:8,11:56,14
+> 3:True:9,10:56,15
+> 4:False:9,12:56,15
+> 5:False:9,11:56,15
+satellite-suboptimal/50/satellite_p01_hyp-1_50_1.tar.bz2:0.435894966125:0.005937711:0.43
+> 0:True:10,11:194,18
+> 1:False:8,11:194,16
+> 2:False:8,12:194,16
+> 3:False:9,12:194,17
+> 4:False:10,12:194,18
+> 5:False:10,13:194,18
+satellite-suboptimal/50/satellite_p01_hyp-1_50_2.tar.bz2:0.434579849243:0.005822211:0.43
+> 0:True:10,11:194,18
+> 1:False:8,12:194,16
+> 2:False:8,12:194,16
+> 3:False:9,12:194,17
+> 4:False:10,15:194,18
+> 5:False:10,15:194,18
+satellite-suboptimal/50/satellite_p01_hyp-1_50_3.tar.bz2:0.433604955673:0.005816332:0.44
+> 0:True:10,11:193,17
+> 1:False:8,11:193,15
+> 2:False:8,11:193,15
+> 3:False:9,12:193,16
+> 4:False:10,13:193,17
+> 5:False:10,12:193,17
+satellite-suboptimal/50/satellite_p01_hyp-2_50_1.tar.bz2:0.433794021606:0.005853828:0.44
+> 0:False:10,13:194,18
+> 1:True:8,9:194,16
+> 2:False:8,12:194,16
+> 3:True:9,10:194,17
+> 4:False:10,13:194,18
+> 5:False:10,13:194,18
+satellite-suboptimal/50/satellite_p01_hyp-2_50_2.tar.bz2:0.435866117477:0.005673691:0.44
+> 0:True:10,11:194,18
+> 1:True:8,9:194,16
+> 2:False:8,12:194,16
+> 3:True:9,10:194,17
+> 4:False:10,12:194,18
+> 5:False:10,12:194,18
+satellite-suboptimal/50/satellite_p01_hyp-2_50_3.tar.bz2:0.437616825104:0.005755013:0.44
+> 0:False:10,12:193,17
+> 1:True:8,9:193,15
+> 2:False:8,11:193,15
+> 3:True:9,10:193,16
+> 4:False:10,13:193,17
+> 5:False:10,13:193,17
+satellite-suboptimal/50/satellite_p01_hyp-3_50_1.tar.bz2:0.436907052994:0.005846326:0.43
+> 0:False:10,14:194,18
+> 1:False:8,11:194,16
+> 2:True:8,10:194,16
+> 3:False:9,12:194,17
+> 4:False:10,14:194,18
+> 5:False:10,13:194,18
+satellite-suboptimal/50/satellite_p01_hyp-3_50_2.tar.bz2:0.435324907303:0.005816471:0.44
+> 0:False:10,14:194,18
+> 1:True:8,11:194,16
+> 2:True:8,11:194,16
+> 3:True:9,12:194,17
+> 4:False:10,14:194,18
+> 5:False:10,14:194,18
+satellite-suboptimal/50/satellite_p01_hyp-3_50_3.tar.bz2:0.43621301651:0.005796718:0.43
+> 0:False:10,15:194,18
+> 1:False:8,12:194,16
+> 2:True:8,10:194,16
+> 3:False:9,13:194,17
+> 4:False:10,14:194,18
+> 5:False:10,13:194,18
+satellite-suboptimal/50/satellite_p01_hyp-4_50_1.tar.bz2:0.437005996704:0.005881543:0.44
+> 0:False:10,13:195,19
+> 1:True:8,9:195,17
+> 2:False:8,12:195,17
+> 3:True:9,10:195,18
+> 4:False:10,12:195,19
+> 5:False:10,12:195,19
+satellite-suboptimal/50/satellite_p01_hyp-4_50_2.tar.bz2:0.434587001801:0.005859612:0.43
+> 0:True:10,12:195,19
+> 1:False:8,11:195,17
+> 2:True:8,10:195,17
+> 3:True:9,11:195,18
+> 4:False:10,14:195,19
+> 5:False:10,13:195,19
+satellite-suboptimal/50/satellite_p01_hyp-4_50_3.tar.bz2:0.430397987366:0.00585008:0.43
+> 0:False:10,14:194,18
+> 1:True:8,11:194,16
+> 2:False:8,13:194,16
+> 3:True:9,12:194,17
+> 4:False:10,15:194,18
+> 5:False:10,14:194,18
+satellite-suboptimal/50/satellite_p02_hyp-1_50_1.tar.bz2:0.404304981232:0.005165137:0.41
+> 0:True:12,13:110,22
+> 1:False:12,16:110,22
+> 2:False:12,16:110,22
+> 3:False:12,14:110,22
+> 4:True:12,13:110,22
+> 5:False:12,16:110,22
+satellite-suboptimal/50/satellite_p02_hyp-1_50_2.tar.bz2:0.406019926071:0.005287075:0.4
+> 0:True:12,15:109,21
+> 1:False:12,17:109,21
+> 2:False:12,16:109,21
+> 3:False:12,17:109,21
+> 4:False:12,16:109,21
+> 5:False:12,16:109,21
+satellite-suboptimal/50/satellite_p02_hyp-1_50_3.tar.bz2:0.407639980316:0.005122017:0.4
+> 0:True:12,14:109,21
+> 1:False:12,18:109,21
+> 2:False:12,17:109,21
+> 3:False:12,16:109,21
+> 4:False:12,15:109,21
+> 5:False:12,17:109,21
+satellite-suboptimal/50/satellite_p02_hyp-2_50_1.tar.bz2:0.404726028442:0.00524114:0.41
+> 0:False:12,14:110,22
+> 1:True:12,12:110,22
+> 2:False:12,14:110,22
+> 3:False:12,13:110,22
+> 4:False:12,14:110,22
+> 5:True:12,12:110,22
+satellite-suboptimal/50/satellite_p02_hyp-2_50_2.tar.bz2:0.404971122742:0.005098562:0.4
+> 0:False:12,17:110,22
+> 1:True:12,14:110,22
+> 2:False:12,17:110,22
+> 3:False:12,15:110,22
+> 4:False:12,16:110,22
+> 5:False:12,15:110,22
+satellite-suboptimal/50/satellite_p02_hyp-2_50_3.tar.bz2:0.406982898712:0.005262601:0.41
+> 0:False:12,17:109,21
+> 1:True:12,14:109,21
+> 2:False:12,16:109,21
+> 3:False:12,15:109,21
+> 4:False:12,16:109,21
+> 5:False:12,15:109,21
+satellite-suboptimal/50/satellite_p02_hyp-3_50_1.tar.bz2:0.406999111176:0.005016869:0.4
+> 0:False:12,15:109,21
+> 1:False:12,16:109,21
+> 2:True:12,14:109,21
+> 3:False:12,16:109,21
+> 4:False:12,16:109,21
+> 5:False:12,15:109,21
+satellite-suboptimal/50/satellite_p02_hyp-3_50_2.tar.bz2:0.402026891708:0.005091822:0.4
+> 0:False:12,16:109,21
+> 1:False:12,15:109,21
+> 2:True:12,14:109,21
+> 3:False:12,16:109,21
+> 4:False:12,16:109,21
+> 5:False:12,15:109,21
+satellite-suboptimal/50/satellite_p02_hyp-3_50_3.tar.bz2:0.407165050507:0.005195837:0.41
+> 0:False:12,15:110,22
+> 1:False:12,13:110,22
+> 2:True:12,12:110,22
+> 3:False:12,15:110,22
+> 4:False:12,15:110,22
+> 5:False:12,13:110,22
+satellite-suboptimal/50/satellite_p02_hyp-4_50_1.tar.bz2:0.405337095261:0.005072152:0.41
+> 0:False:12,14:110,22
+> 1:False:12,15:110,22
+> 2:False:12,16:110,22
+> 3:True:12,13:110,22
+> 4:False:12,14:110,22
+> 5:False:12,15:110,22
+satellite-suboptimal/50/satellite_p02_hyp-4_50_2.tar.bz2:0.404951810837:0.005058478:0.4
+> 0:True:12,13:109,21
+> 1:False:12,14:109,21
+> 2:False:12,15:109,21
+> 3:True:12,13:109,21
+> 4:True:12,13:109,21
+> 5:False:12,14:109,21
+satellite-suboptimal/50/satellite_p02_hyp-4_50_3.tar.bz2:0.407086849213:0.005251117:0.4
+> 0:False:12,15:109,21
+> 1:False:12,15:109,21
+> 2:False:12,16:109,21
+> 3:True:12,14:109,21
+> 4:False:12,15:109,21
+> 5:False:12,15:109,21
+satellite-suboptimal/50/satellite_p03_hyp-1_50_1.tar.bz2:0.382126092911:0.004141407:0.39
+> 0:True:9,10:58,17
+> 1:False:9,11:58,17
+> 2:False:8,10:58,16
+> 3:False:9,11:58,17
+> 4:True:9,10:58,17
+> 5:False:9,11:58,17
+satellite-suboptimal/50/satellite_p03_hyp-1_50_2.tar.bz2:0.387189149857:0.004376408:0.38
+> 0:True:9,9:58,17
+> 1:True:9,9:58,17
+> 2:False:8,9:58,16
+> 3:False:9,10:58,17
+> 4:True:9,9:58,17
+> 5:True:9,9:58,17
+satellite-suboptimal/50/satellite_p03_hyp-1_50_3.tar.bz2:0.386514902115:0.004231404:0.39
+> 0:True:9,10:58,17
+> 1:False:9,11:58,17
+> 2:False:8,10:58,16
+> 3:False:9,11:58,17
+> 4:True:9,10:58,17
+> 5:False:9,11:58,17
+satellite-suboptimal/50/satellite_p03_hyp-2_50_1.tar.bz2:0.386014938354:0.004220235:0.39
+> 0:False:9,11:57,16
+> 1:True:9,10:57,16
+> 2:False:8,12:57,15
+> 3:True:9,10:57,16
+> 4:False:9,12:57,16
+> 5:True:9,10:57,16
+satellite-suboptimal/50/satellite_p03_hyp-2_50_2.tar.bz2:0.387066841125:0.004325725:0.39
+> 0:False:9,10:58,17
+> 1:True:9,9:58,17
+> 2:False:8,11:58,16
+> 3:False:9,10:58,17
+> 4:False:9,11:58,17
+> 5:True:9,9:58,17
+satellite-suboptimal/50/satellite_p03_hyp-2_50_3.tar.bz2:0.386447906494:0.004316056:0.39
+> 0:False:9,10:58,17
+> 1:True:9,9:58,17
+> 2:False:8,10:58,16
+> 3:False:9,10:58,17
+> 4:False:9,10:58,17
+> 5:True:9,9:58,17
+satellite-suboptimal/50/satellite_p03_hyp-3_50_1.tar.bz2:0.385293960571:0.004248189:0.38
+> 0:True:9,11:58,17
+> 1:False:9,12:58,17
+> 2:True:8,10:58,16
+> 3:False:9,13:58,17
+> 4:True:9,11:58,17
+> 5:False:9,12:58,17
+satellite-suboptimal/50/satellite_p03_hyp-3_50_2.tar.bz2:0.385118961334:0.004273604:0.39
+> 0:False:9,11:58,17
+> 1:False:9,12:58,17
+> 2:True:8,9:58,16
+> 3:False:9,11:58,17
+> 4:True:9,10:58,17
+> 5:False:9,12:58,17
+satellite-suboptimal/50/satellite_p03_hyp-3_50_3.tar.bz2:0.381850004196:0.004087105:0.39
+> 0:False:9,11:58,17
+> 1:False:9,12:58,17
+> 2:True:8,9:58,16
+> 3:False:9,12:58,17
+> 4:True:9,10:58,17
+> 5:False:9,12:58,17
+satellite-suboptimal/50/satellite_p03_hyp-4_50_1.tar.bz2:0.387627124786:0.004230705:0.38
+> 0:False:9,12:58,17
+> 1:False:9,12:58,17
+> 2:False:8,11:58,16
+> 3:True:9,11:58,17
+> 4:True:9,11:58,17
+> 5:False:9,12:58,17
+satellite-suboptimal/50/satellite_p03_hyp-4_50_2.tar.bz2:0.386704921722:0.004085482:0.39
+> 0:False:9,12:58,17
+> 1:False:9,11:58,17
+> 2:False:8,11:58,16
+> 3:True:9,10:58,17
+> 4:False:9,12:58,17
+> 5:False:9,11:58,17
+satellite-suboptimal/50/satellite_p03_hyp-4_50_3.tar.bz2:0.38574886322:0.004147728:0.38
+> 0:False:9,11:58,17
+> 1:True:9,10:58,17
+> 2:False:8,11:58,16
+> 3:True:9,10:58,17
+> 4:False:9,12:58,17
+> 5:True:9,10:58,17
+satellite-suboptimal/70/satellite_p01_hyp-1_70_1.tar.bz2:0.437415122986:0.005833278:0.44
+> 0:True:10,12:196,20
+> 1:False:8,13:196,18
+> 2:False:8,14:196,18
+> 3:False:9,13:196,19
+> 4:False:10,16:196,20
+> 5:False:10,15:196,20
+satellite-suboptimal/70/satellite_p01_hyp-1_70_2.tar.bz2:0.434209108353:0.005999472:0.44
+> 0:True:10,11:196,20
+> 1:False:8,13:196,18
+> 2:False:8,13:196,18
+> 3:False:9,13:196,19
+> 4:False:10,14:196,20
+> 5:False:10,15:196,20
+satellite-suboptimal/70/satellite_p01_hyp-1_70_3.tar.bz2:0.438098907471:0.006026169:0.44
+> 0:True:10,11:197,21
+> 1:False:8,14:197,19
+> 2:False:8,14:197,19
+> 3:False:9,14:197,20
+> 4:False:10,16:197,21
+> 5:False:10,16:197,21
+satellite-suboptimal/70/satellite_p01_hyp-2_70_1.tar.bz2:0.433745861053:0.005759891:0.44
+> 0:False:10,14:196,20
+> 1:True:8,10:196,18
+> 2:False:8,14:196,18
+> 3:True:9,11:196,19
+> 4:False:10,14:196,20
+> 5:False:10,14:196,20
+satellite-suboptimal/70/satellite_p01_hyp-2_70_2.tar.bz2:0.435039997101:0.005756105:0.43
+> 0:False:10,15:196,20
+> 1:True:8,10:196,18
+> 2:False:8,13:196,18
+> 3:True:9,11:196,19
+> 4:False:10,14:196,20
+> 5:False:10,15:196,20
+satellite-suboptimal/70/satellite_p01_hyp-2_70_3.tar.bz2:0.436702013016:0.005784958:0.44
+> 0:False:10,14:195,19
+> 1:True:8,11:195,17
+> 2:False:8,13:195,17
+> 3:True:9,12:195,18
+> 4:False:10,14:195,19
+> 5:False:10,14:195,19
+satellite-suboptimal/70/satellite_p01_hyp-3_70_1.tar.bz2:0.433493852615:0.005784736:0.43
+> 0:False:10,15:197,21
+> 1:False:8,12:197,19
+> 2:True:8,11:197,19
+> 3:False:9,13:197,20
+> 4:False:10,15:197,21
+> 5:False:10,14:197,21
+satellite-suboptimal/70/satellite_p01_hyp-3_70_2.tar.bz2:0.435076951981:0.005861125:0.43
+> 0:False:10,15:196,20
+> 1:False:8,13:196,18
+> 2:True:8,9:196,18
+> 3:False:9,13:196,19
+> 4:False:10,14:196,20
+> 5:False:10,13:196,20
+satellite-suboptimal/70/satellite_p01_hyp-3_70_3.tar.bz2:0.436024188995:0.005771213:0.44
+> 0:False:10,15:197,21
+> 1:False:8,13:197,19
+> 2:True:8,11:197,19
+> 3:False:9,13:197,20
+> 4:False:10,16:197,21
+> 5:False:10,15:197,21
+satellite-suboptimal/70/satellite_p01_hyp-4_70_1.tar.bz2:0.439254045486:0.005820782:0.43
+> 0:True:10,13:197,21
+> 1:False:8,12:197,19
+> 2:False:8,14:197,19
+> 3:True:9,12:197,20
+> 4:False:10,15:197,21
+> 5:False:10,15:197,21
+satellite-suboptimal/70/satellite_p01_hyp-4_70_2.tar.bz2:0.437011957169:0.005766964:0.44
+> 0:False:10,15:198,22
+> 1:True:8,10:198,20
+> 2:False:8,14:198,20
+> 3:True:9,11:198,21
+> 4:False:10,14:198,22
+> 5:False:10,15:198,22
+satellite-suboptimal/70/satellite_p01_hyp-4_70_3.tar.bz2:0.434535980225:0.005890125:0.44
+> 0:True:10,13:198,22
+> 1:False:8,12:198,20
+> 2:False:8,13:198,20
+> 3:True:9,12:198,21
+> 4:False:10,16:198,22
+> 5:False:10,15:198,22
+satellite-suboptimal/70/satellite_p02_hyp-1_70_1.tar.bz2:0.405162096024:0.00513869:0.4
+> 0:True:12,13:112,24
+> 1:False:12,15:112,24
+> 2:False:12,15:112,24
+> 3:False:12,14:112,24
+> 4:False:12,14:112,24
+> 5:False:12,14:112,24
+satellite-suboptimal/70/satellite_p02_hyp-1_70_2.tar.bz2:0.404585123062:0.005166069:0.41
+> 0:True:12,14:112,24
+> 1:False:12,17:112,24
+> 2:False:12,17:112,24
+> 3:False:12,16:112,24
+> 4:False:12,15:112,24
+> 5:False:12,16:112,24
+satellite-suboptimal/70/satellite_p02_hyp-1_70_3.tar.bz2:0.405285835266:0.005266448:0.41
+> 0:True:12,14:113,25
+> 1:False:12,16:113,25
+> 2:False:12,17:113,25
+> 3:False:12,15:113,25
+> 4:True:12,14:113,25
+> 5:False:12,16:113,25
+satellite-suboptimal/70/satellite_p02_hyp-2_70_1.tar.bz2:0.405734062195:0.00520897:0.4
+> 0:False:12,17:112,24
+> 1:True:12,15:112,24
+> 2:False:12,17:112,24
+> 3:False:12,16:112,24
+> 4:False:12,16:112,24
+> 5:False:12,16:112,24
+satellite-suboptimal/70/satellite_p02_hyp-2_70_2.tar.bz2:0.407171010971:0.004966483:0.41
+> 0:False:12,15:112,24
+> 1:True:12,13:112,24
+> 2:False:12,15:112,24
+> 3:False:12,14:112,24
+> 4:False:12,15:112,24
+> 5:True:12,13:112,24
+satellite-suboptimal/70/satellite_p02_hyp-2_70_3.tar.bz2:0.406683921814:0.005199603:0.41
+> 0:False:12,17:112,24
+> 1:True:12,15:112,24
+> 2:False:12,16:112,24
+> 3:False:12,17:112,24
+> 4:False:12,17:112,24
+> 5:True:12,15:112,24
+satellite-suboptimal/70/satellite_p02_hyp-3_70_1.tar.bz2:0.406136035919:0.00520366:0.41
+> 0:False:12,17:113,25
+> 1:False:12,16:113,25
+> 2:True:12,13:113,25
+> 3:False:12,18:113,25
+> 4:False:12,18:113,25
+> 5:False:12,15:113,25
+satellite-suboptimal/70/satellite_p02_hyp-3_70_2.tar.bz2:0.407711029053:0.005265755:0.41
+> 0:False:12,17:113,25
+> 1:False:12,16:113,25
+> 2:True:12,13:113,25
+> 3:False:12,18:113,25
+> 4:False:12,18:113,25
+> 5:False:12,15:113,25
+satellite-suboptimal/70/satellite_p02_hyp-3_70_3.tar.bz2:0.407977104187:0.005257762:0.42
+> 0:False:12,19:112,24
+> 1:False:12,17:112,24
+> 2:True:12,15:112,24
+> 3:False:12,19:112,24
+> 4:False:12,19:112,24
+> 5:False:12,17:112,24
+satellite-suboptimal/70/satellite_p02_hyp-4_70_1.tar.bz2:0.407636880875:0.005313958:0.4
+> 0:False:12,17:112,24
+> 1:False:12,16:112,24
+> 2:False:12,19:112,24
+> 3:True:12,15:112,24
+> 4:False:12,16:112,24
+> 5:False:12,17:112,24
+satellite-suboptimal/70/satellite_p02_hyp-4_70_2.tar.bz2:0.406172037125:0.00502694:0.41
+> 0:False:12,14:113,25
+> 1:False:12,14:113,25
+> 2:False:12,16:113,25
+> 3:True:12,13:113,25
+> 4:False:12,14:113,25
+> 5:False:12,14:113,25
+satellite-suboptimal/70/satellite_p02_hyp-4_70_3.tar.bz2:0.404840946198:0.005153745:0.4
+> 0:False:12,16:113,25
+> 1:False:12,16:113,25
+> 2:False:12,18:113,25
+> 3:True:12,14:113,25
+> 4:False:12,15:113,25
+> 5:False:12,17:113,25
+satellite-suboptimal/70/satellite_p03_hyp-1_70_1.tar.bz2:0.38627910614:0.004216488:0.39
+> 0:True:9,11:59,18
+> 1:False:9,12:59,18
+> 2:False:8,12:59,17
+> 3:False:9,12:59,18
+> 4:False:9,12:59,18
+> 5:False:9,12:59,18
+satellite-suboptimal/70/satellite_p03_hyp-1_70_2.tar.bz2:0.384999036789:0.004172034:0.39
+> 0:True:9,11:59,18
+> 1:False:9,13:59,18
+> 2:False:8,12:59,17
+> 3:False:9,14:59,18
+> 4:False:9,12:59,18
+> 5:False:9,13:59,18
+satellite-suboptimal/70/satellite_p03_hyp-1_70_3.tar.bz2:0.385457038879:0.004195578:0.38
+> 0:True:9,11:59,18
+> 1:False:9,12:59,18
+> 2:False:8,11:59,17
+> 3:False:9,13:59,18
+> 4:False:9,12:59,18
+> 5:False:9,12:59,18
+satellite-suboptimal/70/satellite_p03_hyp-2_70_1.tar.bz2:0.386757135391:0.004337987:0.39
+> 0:False:9,11:59,18
+> 1:True:9,10:59,18
+> 2:False:8,12:59,17
+> 3:False:9,11:59,18
+> 4:False:9,12:59,18
+> 5:True:9,10:59,18
+satellite-suboptimal/70/satellite_p03_hyp-2_70_2.tar.bz2:0.384531021118:0.004163599:0.39
+> 0:True:9,11:59,18
+> 1:True:9,11:59,18
+> 2:False:8,12:59,17
+> 3:True:9,11:59,18
+> 4:False:9,12:59,18
+> 5:True:9,11:59,18
+satellite-suboptimal/70/satellite_p03_hyp-2_70_3.tar.bz2:0.387559890747:0.004128131:0.39
+> 0:False:9,12:60,19
+> 1:True:9,10:60,19
+> 2:False:8,13:60,18
+> 3:False:9,11:60,19
+> 4:False:9,13:60,19
+> 5:True:9,10:60,19
+satellite-suboptimal/70/satellite_p03_hyp-3_70_1.tar.bz2:0.386851072311:0.00397791:0.39
+> 0:False:9,11:60,19
+> 1:False:9,13:60,19
+> 2:True:8,9:60,18
+> 3:False:9,13:60,19
+> 4:True:9,10:60,19
+> 5:False:9,13:60,19
+satellite-suboptimal/70/satellite_p03_hyp-3_70_2.tar.bz2:0.386135101318:0.00422761:0.38
+> 0:True:9,11:60,19
+> 1:False:9,13:60,19
+> 2:True:8,10:60,18
+> 3:False:9,14:60,19
+> 4:True:9,11:60,19
+> 5:False:9,13:60,19
+satellite-suboptimal/70/satellite_p03_hyp-3_70_3.tar.bz2:0.387813091278:0.00435084:0.39
+> 0:False:9,12:60,19
+> 1:False:9,14:60,19
+> 2:True:8,10:60,18
+> 3:False:9,14:60,19
+> 4:True:9,11:60,19
+> 5:False:9,14:60,19
+satellite-suboptimal/70/satellite_p03_hyp-4_70_1.tar.bz2:0.388672828674:0.004298642:0.4
+> 0:False:9,12:61,20
+> 1:True:9,11:61,20
+> 2:False:8,13:61,19
+> 3:True:9,11:61,20
+> 4:False:9,13:61,20
+> 5:True:9,11:61,20
+satellite-suboptimal/70/satellite_p03_hyp-4_70_2.tar.bz2:0.386645078659:0.004254651:0.38
+> 0:False:9,14:60,19
+> 1:False:9,12:60,19
+> 2:False:8,14:60,18
+> 3:True:9,11:60,19
+> 4:False:9,14:60,19
+> 5:False:9,12:60,19
+satellite-suboptimal/70/satellite_p03_hyp-4_70_3.tar.bz2:0.385478973389:0.004167858:0.38
+> 0:False:9,14:60,19
+> 1:False:9,12:60,19
+> 2:False:8,13:60,18
+> 3:True:9,11:60,19
+> 4:False:9,13:60,19
+> 5:False:9,12:60,19
+satellite-suboptimal/100/satellite_p01_hyp-1_full.tar.bz2:0.43310713768:0.005784028:0.44
+> 0:True:10,12:199,23
+> 1:False:8,15:199,21
+> 2:False:8,16:199,21
+> 3:False:9,15:199,22
+> 4:False:10,17:199,23
+> 5:False:10,17:199,23
+satellite-suboptimal/100/satellite_p01_hyp-2_full.tar.bz2:0.433073997498:0.005867463:0.43
+> 0:False:10,16:198,22
+> 1:True:8,11:198,20
+> 2:False:8,16:198,20
+> 3:True:9,12:198,21
+> 4:False:10,15:198,22
+> 5:False:10,16:198,22
+satellite-suboptimal/100/satellite_p01_hyp-3_full.tar.bz2:0.437009811401:0.006044126:0.44
+> 0:False:10,17:199,23
+> 1:False:8,15:199,21
+> 2:True:8,12:199,21
+> 3:False:9,15:199,22
+> 4:False:10,17:199,23
+> 5:False:10,16:199,23
+satellite-suboptimal/100/satellite_p01_hyp-4_full.tar.bz2:0.433233976364:0.00595894:0.44
+> 0:False:10,16:200,24
+> 1:False:8,13:200,22
+> 2:False:8,16:200,22
+> 3:True:9,13:200,23
+> 4:False:10,17:200,24
+> 5:False:10,17:200,24
+satellite-suboptimal/100/satellite_p02_hyp-1_full.tar.bz2:0.405522108078:0.005179343:0.41
+> 0:True:12,15:116,28
+> 1:False:12,19:116,28
+> 2:False:12,19:116,28
+> 3:False:12,17:116,28
+> 4:False:12,16:116,28
+> 5:False:12,18:116,28
+satellite-suboptimal/100/satellite_p02_hyp-2_full.tar.bz2:0.406881809235:0.005395559:0.41
+> 0:False:12,19:116,28
+> 1:True:12,15:116,28
+> 2:False:12,18:116,28
+> 3:False:12,17:116,28
+> 4:False:12,18:116,28
+> 5:False:12,16:116,28
+satellite-suboptimal/100/satellite_p02_hyp-3_full.tar.bz2:0.404397010803:0.005317554:0.4
+> 0:False:12,19:116,28
+> 1:False:12,18:116,28
+> 2:True:12,15:116,28
+> 3:False:12,20:116,28
+> 4:False:12,20:116,28
+> 5:False:12,17:116,28
+satellite-suboptimal/100/satellite_p02_hyp-4_full.tar.bz2:0.405071973801:0.005139579:0.4
+> 0:False:12,17:116,28
+> 1:False:12,17:116,28
+> 2:False:12,20:116,28
+> 3:True:12,15:116,28
+> 4:False:12,16:116,28
+> 5:False:12,18:116,28
+satellite-suboptimal/100/satellite_p03_hyp-1_full.tar.bz2:0.388642787933:0.004274398:0.39
+> 0:True:9,11:62,21
+> 1:False:9,13:62,21
+> 2:False:8,12:62,20
+> 3:False:9,14:62,21
+> 4:False:9,12:62,21
+> 5:False:9,13:62,21
+satellite-suboptimal/100/satellite_p03_hyp-2_full.tar.bz2:0.386245965958:0.004323839:0.38
+> 0:False:9,13:62,21
+> 1:True:9,11:62,21
+> 2:False:8,14:62,20
+> 3:False:9,12:62,21
+> 4:False:9,14:62,21
+> 5:True:9,11:62,21
+satellite-suboptimal/100/satellite_p03_hyp-3_full.tar.bz2:0.385437965393:0.004184468:0.39
+> 0:False:9,13:62,21
+> 1:False:9,15:62,21
+> 2:True:8,11:62,20
+> 3:False:9,15:62,21
+> 4:True:9,12:62,21
+> 5:False:9,15:62,21
+satellite-suboptimal/100/satellite_p03_hyp-4_full.tar.bz2:0.385588884354:0.004280599:0.39
+> 0:False:9,15:63,22
+> 1:False:9,13:63,22
+> 2:False:8,15:63,21
+> 3:True:9,12:63,22
+> 4:False:9,15:63,22
+> 5:False:9,13:63,22

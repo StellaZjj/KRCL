@@ -1,0 +1,5 @@
+move robby hallway1 hallway2
+enter robby hallway2 room1
+report robby beacon1 room1
+exit robby room1 hallway2
+move robby hallway2 hallway3

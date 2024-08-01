@@ -1,0 +1,38 @@
+exit pbody r2 h5
+move pbody h5 h7
+move pbody h7 h6
+pick pbody h6 c2
+move pbody h6 h7
+move pbody h7 h5
+move pbody h5 h2
+drop pbody h2 c2
+enter pbody h2 r1
+exit pbody r1 h1
+shoot pbody h1 r4 yellow
+pick pbody h1 c1
+teleport pbody h1 r4 yellow red
+drop pbody r4 c1
+exit pbody r4 h4
+move pbody h4 h3
+enter pbody h3 r3
+shoot pbody r3 h1 yellow
+teleport pbody r3 r4 yellow red
+pick pbody r4 c1
+teleport pbody r4 r3 red yellow
+drop pbody r3 c1
+teleport pbody r3 r4 yellow red
+exit pbody r4 h4
+enter pbody h4 r2
+exit pbody r2 h5
+shoot pbody h5 r4 red
+move pbody h5 h2
+pick pbody h2 c3
+move pbody h2 h5
+teleport pbody h5 r3 red yellow
+drop pbody r3 c3
+teleport pbody r3 h5 yellow red
+move pbody h5 h2
+pick pbody h2 c2
+move pbody h2 h5
+teleport pbody h5 r3 red yellow
+drop pbody r3 c2

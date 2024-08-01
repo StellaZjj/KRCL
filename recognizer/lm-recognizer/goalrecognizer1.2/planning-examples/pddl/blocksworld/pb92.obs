@@ -1,0 +1,11 @@
+unstack s t
+unstack t a
+putdown t
+unstack a r
+unstack r e
+stack s t
+stack a s
+unstack e y
+stack e a
+pickup y
+stack y e

@@ -1,0 +1,4 @@
+digraph Tree {
+	node [shape=circle, fontsize=14, color=black, fillcolor=white, fontcolor=black];
+	 edge [style=solid, color=black];
+}

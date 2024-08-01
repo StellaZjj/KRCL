@@ -1,0 +1,6 @@
+(define (problem pb1)
+   	(:domain abstract)
+   	(:objects a b)
+	(:init (p1 a b))              
+	(:goal (p3 a b))
+)

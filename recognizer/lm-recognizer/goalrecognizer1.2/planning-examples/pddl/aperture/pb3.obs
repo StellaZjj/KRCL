@@ -1,0 +1,14 @@
+move pbody h4 h3
+shoot atlas h5 r1 purple
+shoot atlas h5 r1 blue
+enter atlas h5 r1
+move pbody h3 h2
+exit atlas r1 h4
+move pbody h2 h1
+pick pbody h1 companion
+move atlas h4 h3
+move pbody h1 h2
+move atlas h3 h2
+shoot atlas h2 h5 blue
+teleport pbody h2 h5 blue purple
+drop pbody h5 companion

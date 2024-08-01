@@ -1,0 +1,25 @@
+digraph Tree {
+	node [shape=Mrecord];
+	 edge [style=solid, color=black];
+struct0 [label="<ond4d5> on d4 d5|<ond2d3> on d2 d3|<ond3d4> on d3 d4|<ond5peg3> on d5 peg3|<ond1d2> on d1 d2"];
+struct1 [label="<cleard1> clear d1|<clearpeg2> clear peg2|<ond1d2> on d1 d2"];
+struct2 [label="<cleard2> clear d2|<clearpeg2> clear peg2|<ond2d3> on d2 d3"];
+struct3 [label="<clearpeg3> clear peg3|<ond5peg1> on d5 peg1|<cleard5> clear d5"];
+struct4 [label="<cleard3> clear d3|<clearpeg2> clear peg2|<ond3d4> on d3 d4"];
+struct5 [label="<ond4d5> on d4 d5|<clearpeg2> clear peg2|<cleard4> clear d4"];
+struct2:cleard2 -> struct1:cleard1;
+struct2:cleard2 -> struct5:clearpeg2;
+struct2:cleard2 -> struct1:ond1d2;
+struct4:cleard3 -> struct2:cleard2;
+struct4:cleard3 -> struct5:clearpeg2;
+struct4:cleard3 -> struct2:ond2d3;
+struct0:ond5peg3 -> struct3:clearpeg3;
+struct0:ond5peg3 -> struct3:ond5peg1;
+struct0:ond5peg3 -> struct3:cleard5;
+struct5:cleard4 -> struct4:cleard3;
+struct5:cleard4 -> struct5:clearpeg2;
+struct5:cleard4 -> struct4:ond3d4;
+struct3:cleard5 -> struct5:ond4d5;
+struct3:cleard5 -> struct5:clearpeg2;
+struct3:cleard5 -> struct5:cleard4;
+}

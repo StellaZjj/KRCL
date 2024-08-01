@@ -1,0 +1,8 @@
+drive-truck truck1 posd posb city1
+load-truck box truck1 posb
+drive-truck truck1 posb airportc city1
+unload-truck box truck1 airportc
+fly-airplane plane1 airporte airportc
+load-airplane box plane1 airportc
+fly-airplane plane1 airportc airporte
+unload-airplane box plane1 airporte

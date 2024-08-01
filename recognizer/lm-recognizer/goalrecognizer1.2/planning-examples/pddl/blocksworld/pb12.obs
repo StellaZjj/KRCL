@@ -1,0 +1,22 @@
+pickup b
+pickup c
+pickup d
+pickup i
+pickup j
+pickup k
+stack k l
+stack j k
+stack i j
+pickup g
+pickup h
+stack h i
+pickup f
+stack g h
+stack f g
+pickup e
+stack e f
+pickup a
+stack d e
+stack c d
+stack b c
+stack a b
